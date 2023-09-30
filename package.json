@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "bufferutil": "^4.0.7",
+    "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "next": "latest"
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
+    "utf-8-validate": "^5.0.10"
   },
   "devDependencies": {
     "eslint": "latest",
