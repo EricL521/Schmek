@@ -1,9 +1,9 @@
-import './globals.css'
+import './globals.css';
 
 export const metadata = {
-  title: 'Schmek Game',
+  title: 'Schmek',
   description: 'A simple snake game with abilities',
-}
+};
 
 export default function RootLayout({ children }) {
 	return (
@@ -12,5 +12,5 @@ export default function RootLayout({ children }) {
 				{children}
 			</body>
 		</html>
-	)
-}
+	);
+};

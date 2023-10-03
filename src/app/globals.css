@@ -1,6 +1,9 @@
 :root {
 	font-family: Comfortaa, Arial;
 }
+* {
+	font-family: inherit;
+}
 
 html, body {
 	width: 100vw;

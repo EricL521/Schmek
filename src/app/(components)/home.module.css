@@ -1,0 +1,68 @@
+.interactive {
+	transition: all 0.25s ease-in-out;
+	backface-visibility: hidden;
+}
+.interactive:hover {
+	transform: scale(1.05);
+}
+
+#home {
+	width: 60vh;
+	height: 75vh;
+	background-color: var(--background-color-2);
+	border-radius: 5vh;
+	border: 2px solid var(--text-color);
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+}
+#home * {
+	color: var(--text-color);
+}
+
+#title {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+}
+#title h1 {
+	margin: 0;
+	padding-right: 0.5rem;
+}
+
+#name-input {
+	width: 75%;
+	border-radius: 100vh;
+	border: 1px solid var(--text-color);
+	background-color: var(--background-color);
+	
+	font-size: 25px;
+	text-align: center;
+} 
+#name-input:focus {
+	outline: none;
+	transform: scale(1.05);
+}
+
+#play-button {
+	width: 50%;
+	height: 50px;
+	border-radius: 100vh;
+	border: 1px solid var(--text-color);
+	background-color: var(--primary-color);
+
+	transition: all 0.25s ease-in-out;
+	backface-visibility: hidden;
+
+	font-size: 25px;
+}
+#play-button:hover, #play-button:focus {
+	transform: scale(1.1);
+}
+#play-button:active {
+	transform: scale(1.05);
+}
