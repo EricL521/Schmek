@@ -55,6 +55,8 @@
 	border: 1px solid var(--text-color);
 	background-color: var(--primary-color);
 
+	cursor: pointer;
+
 	transition: all 0.25s ease-in-out;
 	backface-visibility: hidden;
 
