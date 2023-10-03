@@ -10,7 +10,7 @@ const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 // initialize socket.io
-require('./socket').initializeSocket(app);
+require('./server-logic/socket').initializeSocket(app);
  
 app.prepare().then(() => {
 	const server = createServer(async (req, res) => {
@@ -38,7 +38,7 @@ app.prepare().then(() => {
     });
 
 	// initialize socket.io
-	require('./socket').initializeSocket(server);
+	require('./server-logic/socket').initializeSocket(server);
 
     server.listen(port, () => {
 		console.log(`> Ready on http://${hostname}:${port}`);
