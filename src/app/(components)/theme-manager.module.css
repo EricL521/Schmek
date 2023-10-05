@@ -1,5 +1,6 @@
 .interactive {
-	transition: all 0.25s ease-in-out;
+	transition: 0.25s ease;
+	transition-property: transform, border, background-color;
 	backface-visibility: hidden;
 }
 .interactive:hover {
