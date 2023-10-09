@@ -1,0 +1,14 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: transform, color;
+	backface-visibility: hidden;
+}
+.interactive:hover {
+	transform: scale(1.05);
+}
+
+.dot-spacing {
+	display: inline-block;
+
+	transition: width 0.5s ease;
+}

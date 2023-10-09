@@ -8,9 +8,6 @@ const {port} = require('./config');
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
-
-// initialize socket.io
-require('./server-logic/socket').initializeSocket(app);
  
 app.prepare().then(() => {
 	const server = createServer(async (req, res) => {
@@ -37,8 +34,8 @@ app.prepare().then(() => {
 		process.exit(1);
     });
 
-	// initialize socket.io
-	require('./server-logic/socket').initializeSocket(server);
+	// initialize server logic
+	require('./server-logic/initialize-server-logic').initializeServerLogic(server);
 
     server.listen(port, () => {
 		console.log(`> Ready on http://${hostname}:${port}`);

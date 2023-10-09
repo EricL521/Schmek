@@ -1,11 +1,17 @@
 // screen displayed while connecting and loading from server
+'use client';
+
+import { useState } from 'react';
 
 import style from './loading-screen.module.css';
+import LoadingText from './loading-text';
 
 export default function LoadingScreen() {
+	const [status, setStatus] = useState("Connecting");
+
 	return (
-		<div id={style["loading-screen"]}>
-			<h1>Loading...</h1>
+		<div id={style['loading-screen']}>
+			<LoadingText text={status}/>
 		</div>
 	);
 }

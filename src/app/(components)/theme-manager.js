@@ -1,5 +1,5 @@
 // sets theme to light or dark mode
-'use client'
+'use client';
 
 import style from './theme-manager.module.css';
 

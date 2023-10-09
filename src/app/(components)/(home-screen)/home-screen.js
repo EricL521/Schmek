@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import styles from './home.module.css'
 
-export default function Home({onPlay}) {
+export default function HomeScreen({onPlay}) {
 	const [name, setName] = useState('Unnamed Schmeker');
 	const onButtonClick = () => {
 		onPlay(name);
