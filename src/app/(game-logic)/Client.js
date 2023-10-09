@@ -9,6 +9,7 @@ class Client extends EventEmitter {
 		this.initializeSocket();
 	}
 	get connected() { return this.socket.connected; }
+	disconnect() { this.socket.disconnect(); }
 
 	initializeSocket() {
 		this.socket.once("connect", () => {

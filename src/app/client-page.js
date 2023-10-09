@@ -14,11 +14,13 @@ import GameScreen from './(components)/(game-screen)/game-screen';
 
 export default function ClientPage() {
 	// initialize client and socket
-	let client;
+	const [client, setClient] = useState(null);
 	useEffect(() => {
-		client = new Client();
-		return () => {client.socket.disconnect()};
-	}, []);
+		const client = new Client();
+		setClient(client);
+		
+		return () => client.disconnect();
+	}, []); 
 
 	const [currentPage, setCurrentPage] = useState('home'); // ['home', 'loading-screen', 'game-screen]
 	
@@ -35,7 +37,7 @@ export default function ClientPage() {
 	// called when user clicks play on home screen
 	const onPlay = (name) => {
 		setCurrentPage('loading-screen');
-
+		
 		// add listener for when board is initialized
 		client.once("initializeBoard", (boardState, headPos) => {
 			console.log("Board initialized");
