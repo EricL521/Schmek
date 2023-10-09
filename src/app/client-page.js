@@ -21,18 +21,43 @@ export default function ClientPage() {
 		
 		return () => client.disconnect();
 	}, []); 
-
-	const [currentPage, setCurrentPage] = useState('home'); // ['home', 'loading-screen', 'game-screen]
 	
 	// get theme from localStorage, default to light
-	const [currentTheme, setTheme] = useState(
-		(typeof localStorage !== 'undefined') && localStorage.getItem('theme') || 'light'
-	);
+	// can be dark, light, or system
 	const updateTheme = (theme) => {
 		setTheme(theme);
 		// store theme in localStorage
 		localStorage.setItem('theme', theme);
 	};
+	const [currentTheme, setTheme] = useState(
+		(typeof localStorage !== 'undefined') && localStorage.getItem('theme') || 'light'
+	);
+	const getActualTheme = (theme) => {
+		if (theme === 'dark') return 'dark';
+		else if (theme === 'light') return 'light';
+		else return window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark': 'light';
+	};
+	// actualTheme is either dark or light, depending on currentTheme and system theme
+	const [actualTheme, setActualTheme] = useState(getActualTheme(currentTheme));
+	// update actual theme when current theme changes
+	useEffect(() => {
+		setActualTheme(getActualTheme(currentTheme));
+		if (currentTheme !== 'system') return; // don't add listener if theme is not system
+
+		// add listener for when system theme changes
+		const listener = () => {
+			setActualTheme(getActualTheme(currentTheme));
+			console.log('system theme changed');
+		};
+		const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+		mediaQueryList.addEventListener('change', listener);
+		// return a function to remove listener
+		return () => {
+			mediaQueryList.removeEventListener('change', listener);
+		};
+	}, [currentTheme]);
+
+	const [currentPage, setCurrentPage] = useState('home'); // ['home', 'loading-screen', 'game-screen]
 
 	// called when user clicks play on home screen
 	const onPlay = (name) => {
@@ -50,9 +75,9 @@ export default function ClientPage() {
 	};
 	
 	return (
-		<main id={styles.main} className={themes[currentTheme]}>
+		<main id={styles.main} className={themes[actualTheme]}>
 			<div id={styles.content}>
-				<ThemeManager theme={currentTheme} setTheme={updateTheme} />
+				<ThemeManager theme={currentTheme} setTheme={updateTheme} actualTheme={actualTheme}/>
 
 				{(currentPage == 'home')? 
 					<HomeScreen onPlay={onPlay}/> 

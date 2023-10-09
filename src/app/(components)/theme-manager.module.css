@@ -1,10 +1,14 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform, border, background-color;
+	transition-property: transform, border, background-color, opacity;
 	backface-visibility: hidden;
+	
+	opacity: 0.75;
 }
 .interactive:hover {
 	transform: scale(1.1);
+
+	opacity: 1;
 }
 
 #theme-manager {
