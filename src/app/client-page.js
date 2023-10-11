@@ -45,16 +45,10 @@ export default function ClientPage() {
 		if (currentTheme !== 'system') return; // don't add listener if theme is not system
 
 		// add listener for when system theme changes
-		const listener = () => {
-			setActualTheme(getActualTheme(currentTheme));
-			console.log('system theme changed');
-		};
 		const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-		mediaQueryList.addEventListener('change', listener);
+		mediaQueryList.onchange = () => setActualTheme(getActualTheme(currentTheme));
 		// return a function to remove listener
-		return () => {
-			mediaQueryList.removeEventListener('change', listener);
-		};
+		return () => mediaQueryList.onchange = null;
 	}, [currentTheme]);
 
 	const [currentPage, setCurrentPage] = useState('home'); // ['home', 'loading-screen', 'game-screen]
