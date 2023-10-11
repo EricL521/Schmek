@@ -1,11 +1,11 @@
-// this runs when the app is loaded
+// this runs when the page is loaded
 // runs BEFORE DOM is loaded
 
-// update document background to match theme
-// get theme
-const theme = localStorage.getItem('theme') ?? 'light';
-// set background to black or white when window is loaded
+// update document background to match theme when window is loaded
 document.addEventListener('DOMContentLoaded', () => {
+	// get theme
+	const theme = localStorage.getItem('theme') ?? 'system';
+	
 	if (theme === 'dark')
 		document.body.style.backgroundColor = 'black';
 	else if (theme === 'light')

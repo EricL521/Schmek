@@ -9,7 +9,7 @@ export default function RootLayout({ children }) {
 	return (
 		<html lang="en">
 			<head>
-				<script src="./scripts/on-load.js"/>
+				<script src="./scripts/before-load.js"/>
 			</head>
 			
 			<body>

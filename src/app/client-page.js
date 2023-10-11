@@ -29,12 +29,9 @@ export default function ClientPage() {
 		// store theme in localStorage
 		localStorage.setItem('theme', theme);
 	};
-	const [currentTheme, setTheme] = useState(
-		(typeof localStorage !== 'undefined') && localStorage.getItem('theme') || 'light'
-	);
+	const [currentTheme, setTheme] = useState(localStorage.getItem('theme') ?? 'system');
 	const getActualTheme = (theme) => {
-		if (theme === 'dark') return 'dark';
-		else if (theme === 'light') return 'light';
+		if (theme === 'dark' || theme === 'light') return theme;
 		else return window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark': 'light';
 	};
 	// actualTheme is either dark or light, depending on currentTheme and system theme
