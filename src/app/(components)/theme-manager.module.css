@@ -1,6 +1,6 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform, border, background-color, opacity;
+	transition-property: transform, border, background-color, opacity, bottom;
 	backface-visibility: hidden;
 	
 	opacity: 0.75;
@@ -12,31 +12,49 @@
 }
 
 #theme-manager {
+	width: 40px;
+	height: 40px;
 	position: fixed;
 	bottom: 0;
 	right: 0;
 	z-index: 1000;
 
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-
 	margin: 2px;
+
+	transition: height 0.25s ease;
 }
 #theme-manager img {
+	box-sizing: border-box;
 	height: 35px;
 	width: auto;
+	padding: 2px;
+	left: 0; right: 0;
+	margin: auto;
+
 	border-radius: 5px;
-	box-sizing: border-box;
 	border: 2px solid transparent;
 
 	cursor: pointer;
 
-	padding: 2px;
-	margin: 2px;
+	position: absolute;
+	bottom: -40px;
 }
-.active {
+#theme-manager img.active {
 	border: 2px solid var(--text-color) !important;
 	background-color: var(--background-color-2);
+
+	bottom: 0;
+}
+#theme-manager:hover {
+	height: 120px;
+
+	#light-img {
+		bottom: 80px;
+	}
+	#system-img {
+		bottom: 40px;
+	}
+	#dark-img {
+		bottom: 0px;
+	}
 }

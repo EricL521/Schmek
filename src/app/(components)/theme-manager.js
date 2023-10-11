@@ -7,11 +7,11 @@ export default function ThemeManager({theme, setTheme}) {
 	return (
 		<div id={style["theme-manager"]}>
 			<img src="./icons/light-mode.svg" onClick={() => setTheme('light')} draggable="false"
-				className={[style.interactive, theme == "light" && style.active].join(" ")}></img>
+				id={style["light-img"]} className={[style.interactive, theme == "light" && style.active].join(" ")}></img>
 			<img src="./icons/system-mode.svg" onClick={() => setTheme('system')} draggable="false"
-				className={[style.interactive, theme == "system" && style.active].join(" ")}></img>
+				id={style["system-img"]} className={[style.interactive, theme == "system" && style.active].join(" ")}></img>
 			<img src="./icons/dark-mode.svg" onClick={() => setTheme('dark')} draggable="false"
-				className={[style.interactive, theme == "dark" && style.active].join(" ")}></img>
+				id={style["dark-img"]} className={[style.interactive, theme == "dark" && style.active].join(" ")}></img>
 		</div>
 	);
 };
