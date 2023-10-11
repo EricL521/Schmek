@@ -6,14 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	// get theme
 	const theme = localStorage.getItem('theme') ?? 'system';
 	
-	if (theme === 'dark')
-		document.body.style.backgroundColor = 'black';
-	else if (theme === 'light')
-		document.body.style.backgroundColor = 'white';
-	else if (theme === 'system') {
-		if (window.matchMedia('(prefers-color-scheme: dark)').matches)
-			document.body.style.backgroundColor = 'black';
-		else
-			document.body.style.backgroundColor = 'white';
-	}
+	if (theme === 'dark' || theme === 'light') document.body.style.backgroundColor = theme;
+	else document.body.style.backgroundColor = window.matchMedia('(prefers-color-scheme: dark)').matches? 'black': 'white';
 });
