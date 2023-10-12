@@ -1,7 +1,7 @@
 // this component is rendered client-side ONLY
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Client from './(game-logic)/Client';
 
 import styles from './client-page.module.css';
@@ -25,31 +25,25 @@ export default function ClientPage() {
 	const [boardState, setBoardState] = useState(null);
 	const [headPos, setHeadPos] = useState(null);
 	
-	// get theme from localStorage, default to light
 	// can be dark, light, or system
-	const updateTheme = (theme) => {
-		setTheme(theme);
-		// store theme in localStorage
-		localStorage.setItem('theme', theme);
-	};
 	const [currentTheme, setTheme] = useState(localStorage.getItem('theme') ?? 'system');
-	const getActualTheme = (theme) => {
-		if (theme === 'dark' || theme === 'light') return theme;
-		else return window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark': 'light';
-	};
-	// actualTheme is either dark or light, depending on currentTheme and system theme
-	const [actualTheme, setActualTheme] = useState(getActualTheme(currentTheme));
-	// update actual theme when current theme changes
+	// updateTheme also stores theme in localStorage
+	const updateTheme = (theme) => { setTheme(theme); localStorage.setItem('theme', theme); };
+	const [systemTheme, setSystemTheme] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark': 'light');
+	// watch system theme for changes
 	useEffect(() => {
-		setActualTheme(getActualTheme(currentTheme));
-		if (currentTheme !== 'system') return; // don't add listener if theme is not system
-
 		// add listener for when system theme changes
 		const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-		mediaQueryList.onchange = () => setActualTheme(getActualTheme(currentTheme));
+		mediaQueryList.onchange = () => setSystemTheme(mediaQueryList.matches? 'dark': 'light');
 		// return a function to remove listener
 		return () => mediaQueryList.onchange = null;
-	}, [currentTheme]);
+	}, []);
+	const getActualTheme = (currentTheme, systemTheme) => {
+		if (currentTheme === 'dark' || currentTheme === 'light') return currentTheme;
+		else return getActualTheme(systemTheme);
+	};
+	// actualTheme is either dark or light, depending on currentTheme and system theme
+	const actualTheme = useMemo(() => getActualTheme(currentTheme, systemTheme), [currentTheme, systemTheme]);
 
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
 
