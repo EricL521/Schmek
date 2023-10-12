@@ -12,16 +12,11 @@ const initializeServerLogic = (server) => {
 	const io = new Server(server);
 	
 	// get all events from socket-events folder
-	const events = fs.readdirSync(__dirname + "/socket-events").map((file) => {
-		return require("./socket-events/" + file);
-	});	
+	const events = fs.readdirSync(__dirname + "/socket-events").map(fileName => require("./socket-events/" + fileName));	
 	// add all events to each socket
 	io.on("connection", (socket) => {
-		console.log("hey");
 		events.forEach((event) => {
-			socket.on(event.eventName, (... data) => {
-				event.function(game, socket, ... data);
-			});
+			socket.on(event.eventName, (...data) => event.function(game, socket, ...data));
 		});
 	});
 };

@@ -21,6 +21,9 @@ export default function ClientPage() {
 		
 		return () => client.disconnect();
 	}, []); 
+	// create some variables to store board state and head position
+	const [boardState, setBoardState] = useState(null);
+	const [headPos, setHeadPos] = useState(null);
 	
 	// get theme from localStorage, default to light
 	// can be dark, light, or system
@@ -48,7 +51,7 @@ export default function ClientPage() {
 		return () => mediaQueryList.onchange = null;
 	}, [currentTheme]);
 
-	const [currentPage, setCurrentPage] = useState('home'); // ['home', 'loading-screen', 'game-screen]
+	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
 
 	// called when user clicks play on home screen
 	const onPlay = (name) => {
@@ -56,9 +59,9 @@ export default function ClientPage() {
 		
 		// add listener for when board is initialized
 		client.once("initializeBoard", (boardState, headPos) => {
-			console.log("Board initialized");
-			console.log(boardState);
-			console.log(headPos);
+			setBoardState(boardState);
+			setHeadPos(headPos);
+
 			setCurrentPage('game-screen');
 		});
 		// join game
@@ -70,12 +73,12 @@ export default function ClientPage() {
 			<div id={styles.content}>
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} actualTheme={actualTheme}/>
 
-				{(currentPage == 'home')? 
+				{(currentPage == 'home-screen')? 
 					<HomeScreen onPlay={onPlay}/> 
 				:  (currentPage == 'loading-screen')?
 					<LoadingScreen />
 				: (currentPage == 'game-screen')?
-					<GameScreen />
+					<GameScreen boardState={boardState} headPos={headPos} tileSize={50}/>
 				: null}
 				
 			</div>

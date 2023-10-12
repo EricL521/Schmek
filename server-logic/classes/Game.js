@@ -72,7 +72,7 @@ class Game {
 	// updates board and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
-			this.board[tile.position[0]][tile.position[1]] = tile;
+			this.board[tile.position[1]][tile.position[0]] = tile;
 			
 			if (tile.color == null)
 				this.emptyTiles.add(tile);
