@@ -50,8 +50,8 @@ class Snake {
 	// sends game updates to client
 	// should be an array of Tile objects
 	// also sends new head position
-	sendGameUpdate(changes) {
-		this.socket.emit("gameUpdate", changes, this.head.position);
+	sendGameUpdate(tileChanges) {
+		this.socket.emit("gameUpdate", tileChanges, this.head.position);
 	}
 }
 

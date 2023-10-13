@@ -13,7 +13,7 @@ import LoadingScreen from './(components)/(loading-screen)/loading-screen';
 import GameScreen from './(components)/(game-screen)/game-screen';
 
 export default function ClientPage() {
-	// initialize client and socket
+	// initialize client
 	const [client, setClient] = useState(null);
 	useEffect(() => {
 		const client = new Client();
@@ -21,9 +21,6 @@ export default function ClientPage() {
 		
 		return () => client.disconnect();
 	}, []); 
-	// create some variables to store board state and head position
-	const [boardState, setBoardState] = useState(null);
-	const [headPos, setHeadPos] = useState(null);
 	
 	// can be dark, light, or system
 	const [currentTheme, setTheme] = useState(localStorage.getItem('theme') ?? 'system');
@@ -52,12 +49,7 @@ export default function ClientPage() {
 		setCurrentPage('loading-screen');
 		
 		// add listener for when board is initialized
-		client.once("initializeBoard", (boardState, headPos) => {
-			setBoardState(boardState);
-			setHeadPos(headPos);
-
-			setCurrentPage('game-screen');
-		});
+		client.once("boardInitialized", () => setCurrentPage('game-screen'));
 		// join game
 		client.joinGame(name);
 	};
@@ -72,7 +64,7 @@ export default function ClientPage() {
 				:  (currentPage == 'loading-screen')?
 					<LoadingScreen />
 				: (currentPage == 'game-screen')?
-					<GameScreen boardState={boardState} headPos={headPos} tileSize={50}/>
+					<GameScreen client={client} tileSize={50}/>
 				: null}
 				
 			</div>
