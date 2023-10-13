@@ -14,6 +14,7 @@ class Client extends EventEmitter {
 	get connected() { return this.socket.connected; }
 	disconnect() { this.socket.disconnect(); }
 
+	// add listeners for socket events
 	initializeSocket() {
 		this.socket.on("gameUpdate", (tileChanges, headPos) => {
 			this.updateBoard(tileChanges);
