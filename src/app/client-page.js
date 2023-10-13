@@ -40,6 +40,7 @@ export default function ClientPage() {
 		else return getActualTheme(systemTheme);
 	};
 	// actualTheme is either dark or light, depending on currentTheme and system theme
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const actualTheme = useMemo(() => getActualTheme(currentTheme, systemTheme), [currentTheme, systemTheme]);
 
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
@@ -57,7 +58,7 @@ export default function ClientPage() {
 	return (
 		<main id={styles.main} className={themes[actualTheme]}>
 			<div id={styles.content}>
-				<ThemeManager theme={currentTheme} setTheme={updateTheme} actualTheme={actualTheme}/>
+				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'}/>
 
 				{(currentPage == 'home-screen')? 
 					<HomeScreen onPlay={onPlay}/> 

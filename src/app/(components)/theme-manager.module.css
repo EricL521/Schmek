@@ -24,37 +24,42 @@
 	transition: height 0.25s ease;
 }
 #theme-manager img {
+	height: 100%;
+	width: auto;
+}
+#theme-manager button {
 	box-sizing: border-box;
 	height: 35px;
-	width: auto;
+	width: min-content;
 	padding: 2px;
 	left: 0; right: 0;
-	margin: auto;
+	margin: 2.5px auto 2.5px auto;
 
 	border-radius: 5px;
 	border: 2px solid transparent;
+	background-color: transparent;
 
 	cursor: pointer;
 
 	position: absolute;
 	bottom: -40px;
 }
-#theme-manager img.active {
+#theme-manager button.active {
 	border: 2px solid var(--text-color) !important;
 	background-color: var(--background-color-2);
 
 	bottom: 0;
 }
-#theme-manager:hover {
+#theme-manager:hover, #theme-manager.always-visible {
 	height: 120px;
 
-	#light-img {
+	#light {
 		bottom: 80px;
 	}
-	#system-img {
+	#system {
 		bottom: 40px;
 	}
-	#dark-img {
+	#dark {
 		bottom: 0px;
 	}
 }
