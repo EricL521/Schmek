@@ -12,7 +12,7 @@ export default function BoardRow({ row, tileSize }) {
 	
 	// generate row tiles
 	const tiles = row.map(tile => 
-		<td key={getTileKey(tile)} style={getTileStyle(tile)} className={style["tile"]}></td>	
+		<td key={getTileKey(tile)} id={getTileKey(tile)} style={getTileStyle(tile)} className={style["tile"]}></td>	
 	);
 
 	return (

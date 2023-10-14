@@ -5,18 +5,12 @@ const { Tile } = require("./Tile.js");
 class Snake {
 	constructor(socket, name, color, body, direction) {
 		this.socket = socket;
-		this.initializeSocket();
 		this.name = name;
 		this.color = color;
 		this.alive = true;
 		// body is an array of Tile objects, with the tail at index 0
 		this.body = body;
 		this.setDirection(direction, true); // [x, y]
-	}
-
-	// adds listeners for socket
-	initializeSocket() {
-		
 	}
 
 	setDirection(newDirection, initial) {
@@ -31,21 +25,28 @@ class Snake {
 		// keep track of changed Tiles
 		const tileChanges = [];
 
-		// update body
-		// add new head
-		const currentHeadPos = this.head.position;
-		const newHeadPos = [currentHeadPos[0] + this.direction[0], currentHeadPos[1] + this.direction[1]];
-		this.body.push(new Tile(newHeadPos, this.color));
-		tileChanges.push(this.head); // add new head to tileChanges
-		// remove tail
-		tileChanges.push(new Tile(this.body.shift().position, null)); // remove tail and add to tileChanges
+		const magnitude = Math.abs(this.direction[0] + this.direction[1]);
+		// only update if snake is moving
+		if (magnitude !== 0) {
+			// update body
+			// add new head
+			const oldHeadPos = this.head.position;
+			const newHeadPos = [oldHeadPos[0] + this.direction[0], oldHeadPos[1] + this.direction[1]];
+			this.body.push(new Tile(newHeadPos, this.color));
+			tileChanges.push(this.head); // add new head to tileChanges
+			// remove tail
+			const oldTailPos = this.body.shift().position;
+			const newTailPos = this.tail.position;
+			// if new tail is not the same as old tail, add old tail to tileChanges
+			if (!(oldTailPos[0] == newTailPos[0] && oldTailPos[1] == newTailPos[1])) 
+				tileChanges.push(new Tile(oldTailPos, null));
+		}
 
 		// return all TileChanges
 		return tileChanges;
 	}
-	get head() {
-		return this.body[this.body.length - 1];
-	}
+	get head() { return this.body[this.body.length - 1]; }
+	get tail() { return this.body[0]; }
 
 	// sends game updates to client
 	// should be an array of Tile objects

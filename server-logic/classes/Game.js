@@ -12,14 +12,20 @@ class Game {
 	initializeBoard(dimensions) {
 		const board = [];
 		const emptyTiles = new Set();
-		for (let i = 0; i < dimensions[0]; i++) {
+		for (let y = 0; y < dimensions[0]; y++) {
 			board.push([]);
-			for (let j = 0; j < dimensions[1]; j++) {
-				board[i].push(new Tile([i, j], null));
-				emptyTiles.add(board[i][j]);
+			for (let x = 0; x < dimensions[1]; x++) {
+				board[y].push(new Tile([x, y], null));
+				emptyTiles.add(board[y][x]);
 			}
 		}
 		return [board, emptyTiles];
+	}
+
+	// returns a random empty tile
+	getRandomEmptyTile() {
+		const emptyTilesArray = Array.from(this.emptyTiles);
+		return emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)];
 	}
 
 	// adds a snake to the game
@@ -27,7 +33,7 @@ class Game {
 	addSnake(socket, name, color) {
 		// randomly generate a head position for the snake
 		const headPos = this.getRandomEmptyTile().position;
-		const body = [new Tile(headPos, color)];
+		const body = Array(3).fill(new Tile(headPos, color)); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
 		// update board and other snakes
@@ -40,11 +46,7 @@ class Game {
 
 		return snake;
 	}
-	// returns a random empty tile
-	getRandomEmptyTile() {
-		const emptyTilesArray = Array.from(this.emptyTiles);
-		return emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)];
-	}
+	getSnake(socket) { return this.snakes.get(socket); }
 
 	// updates tps times per second
 	startUpdateLoop(tps) {
@@ -60,10 +62,9 @@ class Game {
 	// main update function, called every tick
 	update() {
 		const tileChanges = [];
-		for (const snake of this.snakes.values()) {
-			tileChanges.concat(snake.update());
-		}
-
+		for (const snake of this.snakes.values())
+			tileChanges.push(...snake.update());
+		
 		// merge tileChanges into board
 		this.updateBoard(tileChanges);
 		// send tileChanges to all snakes

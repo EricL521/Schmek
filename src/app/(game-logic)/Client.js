@@ -1,9 +1,20 @@
 import io from 'socket.io-client';
 import { EventEmitter } from 'events';
 
+// maps key names to what they do
+// emits the first value, and passes the rest as arguments
+const defaultControls = new Map([
+	["ArrowUp", ["direction", [0, -1]]],
+	["ArrowDown", ["direction", [0, 1]]],
+	["ArrowLeft", ["direction", [-1, 0]]],
+	["ArrowRight", ["direction", [1, 0]]],
+]);
+
 class Client extends EventEmitter {
-	constructor() {
+	constructor(controls) {
 		super();
+
+		this.controls = controls ?? defaultControls;
 
 		this.socket = io();
 		this.initializeSocket();
@@ -46,10 +57,15 @@ class Client extends EventEmitter {
 
 	// applies tile changes to board state
 	updateBoard(tileChanges) {
-		for (const tileChange of tileChanges) {
-			const [x, y] = tileChange.position;
-			this.boardState[y][x] = tileChange.color;
+		for (const tile of tileChanges) {
+			const [x, y] = tile.position;
+			this.boardState[y][x] = tile;
 		}
+	}
+	// called when user presses a key, and sends it to the server
+	keyPress(key) {
+		const action = this.controls.get(key);
+		if (action) this.socket.emit(action[0], ...action.slice(1));
 	}
 }
 

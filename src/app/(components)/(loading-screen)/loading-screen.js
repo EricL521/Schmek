@@ -7,7 +7,7 @@ import style from './loading-screen.module.css';
 import LoadingText from './loading-text';
 
 export default function LoadingScreen() {
-	const [status, setStatus] = useState("Connecting");
+	const [status, setStatus] = useState("Joining");
 
 	return (
 		<div id={style['loading-screen']}>

@@ -1,5 +1,7 @@
 // component that renders the board
 
+import { useMemo } from "react";
+
 import style from "./board.module.css";
 
 import BoardRow from "./board-row";
@@ -8,10 +10,10 @@ import BoardRow from "./board-row";
 // headpos is just [x, y]
 export default function Board({ boardState, headPos, tileSize }) {
 	// offset board to make headPos the center
-	const boardStyle = {
+	const boardStyle = useMemo(() => ({
 		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'px )',
 		top: 'calc( 50% - ' + (headPos[1] + 0.5) * tileSize + 'px )',
-	};
+	}), [headPos, tileSize]);
 	
 	// generate table
 	const rows = boardState.map((row, index) =>
