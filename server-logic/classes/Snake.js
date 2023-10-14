@@ -18,7 +18,7 @@ class Snake {
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
 			this.direction = newDirection;
 	}
-	update() {
+	updateHead() {
 		// if dead, don't update
 		if (!this.alive) return;
 
@@ -32,17 +32,31 @@ class Snake {
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.direction[0], oldHeadPos[1] + this.direction[1]];
-			this.body.push(new Tile(newHeadPos, this.color));
+			this.body.push(new Tile(newHeadPos, "snake", this.color));
 			tileChanges.push(this.head); // add new head to tileChanges
-			// remove tail
+		}
+
+		// return all TileChanges, and new head position
+		return [tileChanges, this.head.position];
+	}
+	updateTail() {
+		// if dead, don't update
+		if (!this.alive) return;
+
+		// keep track of changed Tiles
+		const tileChanges = [];
+
+		const magnitude = Math.abs(this.direction[0] + this.direction[1]);
+		// only update if snake is moving
+		if (magnitude !== 0) {
 			const oldTailPos = this.body.shift().position;
 			const newTailPos = this.tail.position;
 			// if new tail is not the same as old tail, add old tail to tileChanges
 			if (!(oldTailPos[0] == newTailPos[0] && oldTailPos[1] == newTailPos[1])) 
-				tileChanges.push(new Tile(oldTailPos, null));
+				tileChanges.push(new Tile(oldTailPos, null, null));
 		}
 
-		// return all TileChanges
+		// return tileChanges
 		return tileChanges;
 	}
 	get head() { return this.body[this.body.length - 1]; }

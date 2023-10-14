@@ -2,10 +2,14 @@
 class Tile {
 	// position is [x, y]
 	// x is going right, y is going down
-	// if color is null, tile is empty
-	constructor(position, color) {
+	// type is either 'snake' or 'food', or null if empty
+	// size is a number, 1 or less, that scales the size of the tile
+	constructor(position, type, color, size = 1) {
 		this.position = position;
 		this.color = color;
+
+		this.type = type;
+		this.size = size ?? 1;
 	}
 }
 

@@ -4,10 +4,12 @@ const { Tile } = require("./Tile.js");
 // contains the logic for the game
 class Game {
 	// dimensions is an array of [width, height]
-	constructor(dimensions) {
+	constructor(dimensions, numFood = 0) {
 		[this.board, this.emptyTiles] = this.initializeBoard(dimensions);
-
 		this.snakes = new Map(); // maps socket to snake
+		
+		// generate food
+		this.generateFood(numFood);
 	}
 	initializeBoard(dimensions) {
 		const board = [];
@@ -33,7 +35,7 @@ class Game {
 	addSnake(socket, name, color) {
 		// randomly generate a head position for the snake
 		const headPos = this.getRandomEmptyTile().position;
-		const body = Array(3).fill(new Tile(headPos, color)); // body is 3 tiles long
+		const body = Array(3).fill(new Tile(headPos, "snake", color)); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
 		// update board and other snakes
@@ -62,9 +64,20 @@ class Game {
 	// main update function, called every tick
 	update() {
 		const tileChanges = [];
-		for (const snake of this.snakes.values())
-			tileChanges.push(...snake.update());
-		
+		// update all snakes
+		for (const snake of this.snakes.values()) {
+			const [snakeTileChanges, newHeadPos] = snake.updateHead();
+			tileChanges.push(...snakeTileChanges);
+			// if snake hasn't eaten food, update tail
+			const [x, y] = newHeadPos;
+			if (this.board[y][x].type !== "food") {
+				const snakeTileChanges = snake.updateTail();
+				tileChanges.push(...snakeTileChanges);
+			}
+			// if it has, generate new food
+			else this.generateFood();
+		}
+
 		// merge tileChanges into board
 		this.updateBoard(tileChanges);
 		// send tileChanges to all snakes
@@ -86,6 +99,17 @@ class Game {
 	updatePlayers(tileChanges) {
 		for (const snake of this.snakes.values())
 			snake.sendGameUpdate(tileChanges);
+	}
+
+	// generates numFood food tiles
+	generateFood(numFood = 1) {
+		const tileChanges = [];
+		for (let i = 0; i < numFood; i++) {
+			const food = new Tile(this.getRandomEmptyTile().position, "food", "red", 0.9);
+			tileChanges.push(food);
+		}
+		this.updateBoard(tileChanges);
+		this.updatePlayers(tileChanges);
 	}
 }
 

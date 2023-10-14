@@ -1,9 +1,9 @@
 // creates game object
 const { Game } = require("./classes/Game.js");
-const { dimensions, tps } = require("./game-config.json");
+const { dimensions, tps, numFood } = require("./game-config.json");
 
 const initializeGame = () => {
-	const game = new Game(dimensions);
+	const game = new Game(dimensions, numFood);
 	// start update loop
 	game.startUpdateLoop(tps);
 

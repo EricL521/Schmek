@@ -1,4 +1,5 @@
 {
 	"dimensions": [100, 100],
+	"numFood": 100,
 	"tps": 2
 }
