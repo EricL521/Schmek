@@ -18,16 +18,15 @@ class Snake {
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
 			this.direction = newDirection;
 	}
-	updateHead() {
-		// if dead, don't update
-		if (!this.alive) return;
+	get speed() { return Math.abs(this.direction[0] + this.direction[1]); }
 
+	// returns [tileChanges, newHeadPos]
+	updateHead() {
 		// keep track of changed Tiles
 		const tileChanges = [];
 
-		const magnitude = Math.abs(this.direction[0] + this.direction[1]);
 		// only update if snake is moving
-		if (magnitude !== 0) {
+		if (this.speed !== 0) {
 			// update body
 			// add new head
 			const oldHeadPos = this.head.position;
@@ -39,16 +38,17 @@ class Snake {
 		// return all TileChanges, and new head position
 		return [tileChanges, this.head.position];
 	}
+	// returns tileChanges
+	removeHead() {
+		return [this.body.pop()];
+	}
+	// returns tileChanges
 	updateTail() {
-		// if dead, don't update
-		if (!this.alive) return;
-
 		// keep track of changed Tiles
 		const tileChanges = [];
 
-		const magnitude = Math.abs(this.direction[0] + this.direction[1]);
 		// only update if snake is moving
-		if (magnitude !== 0) {
+		if (this.speed !== 0) {
 			const oldTailPos = this.body.shift().position;
 			const newTailPos = this.tail.position;
 			// if new tail is not the same as old tail, add old tail to tileChanges

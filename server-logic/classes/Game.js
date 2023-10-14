@@ -66,16 +66,27 @@ class Game {
 		const tileChanges = [];
 		// update all snakes
 		for (const snake of this.snakes.values()) {
-			const [snakeTileChanges, newHeadPos] = snake.updateHead();
-			tileChanges.push(...snakeTileChanges);
-			// if snake hasn't eaten food, update tail
+			if (!snake.alive || snake.speed === 0) continue; // skip dead snakes, and non-moving snakes
+
+			let [snakeTileChanges, newHeadPos] = snake.updateHead();
+
+			// update tail depending on what the head has moved into
 			const [x, y] = newHeadPos;
-			if (this.board[y][x].type !== "food") {
-				const snakeTileChanges = snake.updateTail();
-				tileChanges.push(...snakeTileChanges);
-			}
+			const headTile = this.board[y][x];
+			if (headTile.type === null)
+				snakeTileChanges.push(...snake.updateTail());
 			// if it has, generate new food
-			else this.generateFood();
+			else if (headTile.type === "food") this.generateFood();
+			// at this point, snake dies
+			else {
+				snake.alive = false;
+				// also undo head update and snakeTileChanges
+				snake.removeHead();
+				snakeTileChanges = [];
+			}
+
+			// add snakeTileChanges to tileChanges
+			tileChanges.push(...snakeTileChanges);
 		}
 
 		// merge tileChanges into board
