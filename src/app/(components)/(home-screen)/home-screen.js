@@ -6,8 +6,21 @@ import { useState } from 'react';
 import styles from './home.module.css'
 
 export default function HomeScreen({onPlay}) {
-	const [name, setName] = useState('Unnamed Schmeker');
-	const [color, setColor] = useState('#ca97d7');
+	const [name, setName] = useState(localStorage.getItem('name') ?? 'Unnamed Schmeker');
+	// this function updates the name and localStorage
+	const updateName = (newName) => {
+		// set name and update localStorage
+		setName(newName);
+		localStorage.setItem('name', newName);
+	};
+	const [color, setColor] = useState(localStorage.getItem('color') ?? '#ca97d7');
+	// this function updates the color and localStorage
+	const updateColor = (newColor) => {
+		// set color and update localStorage
+		setColor(newColor);
+		localStorage.setItem('color', newColor);
+	};
+
 	const onButtonClick = () => {
 		onPlay(name, color);
 	};
@@ -21,9 +34,9 @@ export default function HomeScreen({onPlay}) {
 			<div id={styles["input-div"]}>
 				<input id={styles['name-input']} className={styles['interactive']} 
 					type="text" placeholder="Your Username" value={name}
-					onChange={e => setName(e.target.value)} />
+					onChange={e => updateName(e.target.value)} />
 				<input id={styles['color-input']} type="color"
-					value={color} onChange={e => setColor(e.target.value)}/>
+					value={color} onChange={e => updateColor(e.target.value)}/>
 				<label for={styles['color-input']} id={styles['color-label']} className={styles['interactive']} 
 					style={{backgroundColor: color}} />
 			</div>
