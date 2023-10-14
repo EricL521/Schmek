@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import styles from './home.module.css'
 
-export default function HomeScreen({onPlay}) {
+export default function HomeScreen({joinGame}) {
 	const [name, setName] = useState(localStorage.getItem('name') ?? 'Unnamed Schmeker');
 	// this function updates the name and localStorage
 	const updateName = (newName) => {
@@ -21,8 +21,10 @@ export default function HomeScreen({onPlay}) {
 		localStorage.setItem('color', newColor);
 	};
 
-	const onButtonClick = () => {
-		onPlay(name, color);
+	// unfocuses active element if it wasn't selected with tab
+	const unFocus = () => {
+		if (!document.activeElement.matches("*:focus-visible"))
+			document.activeElement.blur();
 	};
 
 	return (
@@ -35,12 +37,14 @@ export default function HomeScreen({onPlay}) {
 				<input id={styles['name-input']} className={styles['interactive']} 
 					type="text" placeholder="Your Username" value={name}
 					onChange={e => updateName(e.target.value)} />
-				<input id={styles['color-input']} type="color"
+				<input id={styles['color-input']} type="color" onClick={unFocus}
 					value={color} onChange={e => updateColor(e.target.value)}/>
 				<label for={styles['color-input']} id={styles['color-label']} className={styles['interactive']} 
-					style={{backgroundColor: color}} />
+					style={{backgroundColor: color}}  />
 			</div>
-			<button id={styles["play-button"]} onClick={onButtonClick}>Play</button>
+			<button id={styles["play-button"]} onClick={() => {joinGame(name, color); unFocus();}}>
+				Play
+			</button>
 		</div>
 	);
 };

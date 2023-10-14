@@ -46,7 +46,7 @@ export default function ClientPage() {
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
 
 	// called when user clicks play on home screen
-	const onPlay = (name, color) => {
+	const joinGame = (name, color) => {
 		setCurrentPage('loading-screen');
 		
 		// add listener for when board is initialized
@@ -61,7 +61,7 @@ export default function ClientPage() {
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'}/>
 
 				{(currentPage == 'home-screen')? 
-					<HomeScreen onPlay={onPlay}/> 
+					<HomeScreen joinGame={joinGame}/> 
 				:  (currentPage == 'loading-screen')?
 					<LoadingScreen />
 				: (currentPage == 'game-screen')?
