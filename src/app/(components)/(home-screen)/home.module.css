@@ -3,7 +3,7 @@
 	transition-property: transform, border, background-color, color;
 	backface-visibility: hidden;
 }
-.interactive:hover {
+.interactive:hover, .interactive:focus-visible, .interactive:focus-within {
 	transform: scale(1.05);
 }
 
@@ -32,6 +32,13 @@
 	padding-right: 0.5rem;
 }
 
+#input-div {
+	width: 90%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+}
 #name-input {
 	width: 75%;
 	border-radius: 100vh;
@@ -44,6 +51,23 @@
 #name-input:focus {
 	outline: none;
 	transform: scale(1.05);
+}
+#color-label {
+	width: 5vh;
+	height: 5vh;
+	border-radius: 1.5vh;
+	border: 1px solid var(--text-color);
+
+	cursor: pointer;
+}
+#color-input:focus-visible + #color-label {
+	outline: 5px auto Highlight; 
+	transform: scale(1.05);
+}
+#color-input {
+	position: absolute;
+	left: -100vw;
+	top: -100vh;
 }
 
 #play-button {
@@ -60,7 +84,7 @@
 
 	font-size: 25px;
 }
-#play-button:hover, #play-button:focus {
+#play-button:hover, #play-button:focus-visible {
 	transform: scale(1.1);
 }
 #play-button:active {

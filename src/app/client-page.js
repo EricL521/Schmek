@@ -46,13 +46,13 @@ export default function ClientPage() {
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
 
 	// called when user clicks play on home screen
-	const onPlay = (name) => {
+	const onPlay = (name, color) => {
 		setCurrentPage('loading-screen');
 		
 		// add listener for when board is initialized
 		client.once("boardInitialized", () => setCurrentPage('game-screen'));
 		// join game
-		client.joinGame(name);
+		client.joinGame(name, color);
 	};
 	
 	return (

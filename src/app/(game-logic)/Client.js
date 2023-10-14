@@ -36,11 +36,11 @@ class Client extends EventEmitter {
 	}
 
 	// if called before connect, will be called when connected
-	joinGame(name) {
+	joinGame(name, color) {
 		// make another function so we can reuse the code below
 		const joinGameFunction = () => {
 			// send name to server
-			this.socket.emit("join", name, (boardState, headPos) => {
+			this.socket.emit("join", name, color, (boardState, headPos) => {
 				// in call back initialize board
 				this.boardState = boardState;
 				this.headPos = headPos;
