@@ -37,10 +37,11 @@ export default function HomeScreen({joinGame}) {
 				<input id={styles['name-input']} className={styles['interactive']} 
 					type="text" placeholder="Your Username" value={name}
 					onChange={e => updateName(e.target.value)} />
-				<input id={styles['color-input']} type="color" onClick={unFocus}
-					value={color} onChange={e => updateColor(e.target.value)}/>
-				<label for={styles['color-input']} id={styles['color-label']} className={styles['interactive']} 
-					style={{backgroundColor: color}}  />
+				<label id={styles['color-label']} className={styles['interactive']} 
+					style={{backgroundColor: color}}>
+					<input id={styles['color-input']} type="color" onClick={unFocus}
+						value={color} onChange={e => updateColor(e.target.value)}/>
+				</label>
 			</div>
 			<button id={styles["play-button"]} onClick={() => {joinGame(name, color); unFocus();}}>
 				Play

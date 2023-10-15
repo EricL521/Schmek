@@ -50,7 +50,6 @@
 #theme-manager button.selected {
 	border: 2px solid var(--text-color) !important;
 	background-color: var(--background-color-2);
-	opacity: 1;
 
 	bottom: 0;
 }

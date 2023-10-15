@@ -15,11 +15,6 @@ html, body {
 	overflow: hidden;
 }
 
-/* add outlines for keyboard selections */
-input:focus-visible, button:focus-visible, textarea:focus-visible, select:focus-visible {
-	outline: 5px auto Highlight;
-}
-
 /* Set up Comfortaa font */
 @font-face {
 	font-family: Comfortaa;
