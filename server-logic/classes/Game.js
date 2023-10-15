@@ -5,6 +5,7 @@ const { Tile } = require("./Tile.js");
 class Game {
 	// dimensions is an array of [width, height]
 	constructor(dimensions, numFood = 0) {
+		// board is a 2d array of Tile objects, emptyTiles is a set of positions
 		[this.board, this.emptyTiles] = this.initializeBoard(dimensions);
 		this.snakes = new Map(); // maps socket to snake
 		
@@ -18,7 +19,7 @@ class Game {
 			board.push([]);
 			for (let x = 0; x < dimensions[1]; x++) {
 				board[y].push(new Tile([x, y], null));
-				emptyTiles.add(board[y][x]);
+				emptyTiles.add(board[y][x].positionString);
 			}
 		}
 		return [board, emptyTiles];
@@ -28,7 +29,7 @@ class Game {
 	// returns snake
 	addSnake(socket, name, color) {
 		// randomly generate a head position for the snake
-		const headPos = this.getRandomEmptyTile().position;
+		const headPos = this.getRandomEmptyPos();
 		const body = Array(3).fill(new Tile(headPos, "snake", color)); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
@@ -70,6 +71,11 @@ class Game {
 				const headTile = this.board[y][x];
 				if (headTile.type === null) // snake hit empty tile
 					snakeTileChanges.push(...snake.updateTail());
+				// if snake hits its own tail, it doesn't die
+				else if (snake.headTile.positionString === headTile.positionString) {
+					snake.updateTail();
+					snakeTileChanges = [];
+				}
 				// snake hit food
 				else if (headTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
@@ -104,9 +110,9 @@ class Game {
 			this.board[y][x] = tile;
 			
 			if (tile.color == null)
-				this.emptyTiles.add(tile);
+				this.emptyTiles.add(tile.positionString);
 			else
-				this.emptyTiles.delete(tile);
+				this.emptyTiles.delete(tile.positionString);
 		}
 	}
 	// sends out tileChanges to all snakes
@@ -126,16 +132,18 @@ class Game {
 	generateFood(numFood = 1) {
 		const tileChanges = [];
 		for (let i = 0; i < numFood; i++) {
-			const food = new Tile(this.getRandomEmptyTile().position, "food", "red", 0.9);
+			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.9);
 			tileChanges.push(food);
+
+			// apply changes to board to update emptyTiles
+			this.updateBoard([food]);
 		}
-		this.updateBoard(tileChanges);
 		this.updatePlayers(tileChanges);
 	}
-	// returns a random empty tile
-	getRandomEmptyTile() {
+	// returns a random empty position
+	getRandomEmptyPos() {
 		const emptyTilesArray = Array.from(this.emptyTiles);
-		return emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)];
+		return Tile.stringToPosition(emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)]);
 	}
 }
 

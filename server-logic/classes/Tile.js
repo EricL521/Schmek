@@ -1,5 +1,10 @@
 // represents a tile on the board
 class Tile {
+	static stringToPosition(positionString) {
+		const [x, y] = positionString.split(",");
+		return [parseInt(x), parseInt(y)];
+	}
+
 	// position is [x, y]
 	// x is going right, y is going down
 	// type is either 'snake' or 'food', or null if empty
@@ -11,6 +16,8 @@ class Tile {
 		this.type = type;
 		this.size = size ?? 1;
 	}
+
+	get positionString() { return this.position.toString(); }
 }
 
 module.exports = { Tile };
