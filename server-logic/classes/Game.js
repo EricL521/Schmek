@@ -27,10 +27,10 @@ class Game {
 
 	// adds a snake to the game
 	// returns snake
-	addSnake(socket, name, color) {
+	addSnake(socket, name, color, initialLength = 3) {
 		// randomly generate a head position for the snake
 		const headPos = this.getRandomEmptyPos();
-		const body = Array(3).fill(new Tile(headPos, "snake", color)); // body is 3 tiles long
+		const body = Array(initialLength).fill(new Tile(headPos, "snake", color)); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
 		// update board and other snakes
@@ -72,7 +72,7 @@ class Game {
 				if (headTile.type === null) // snake hit empty tile
 					snakeTileChanges.push(...snake.updateTail());
 				// if snake hits its own tail, it doesn't die
-				else if (snake.headTile.positionString === headTile.positionString) {
+				else if (snake.head.positionString === headTile.positionString) {
 					snake.updateTail();
 					snakeTileChanges = [];
 				}
