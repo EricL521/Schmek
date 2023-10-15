@@ -68,16 +68,16 @@ class Game {
 			const [x, y] = newHeadPos;
 			// if snake is in bounds, check if it has hit anything
 			if (this.isInBounds(newHeadPos)) {
-				const headTile = this.board[y][x];
-				if (headTile.type === null) // snake hit empty tile
+				const newHeadTile = this.board[y][x];
+				if (newHeadTile.type === null) // snake hit empty tile
 					snakeTileChanges.push(...snake.updateTail());
 				// if snake hits its own tail, it doesn't die
-				else if (snake.head.positionString === headTile.positionString) {
+				else if (newHeadTile.positionString === snake.tail.positionString) {
 					snake.updateTail();
 					snakeTileChanges = [];
 				}
 				// snake hit food
-				else if (headTile.type === "food") this.generateFood();
+				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
 				else {
 					snake.alive = false;
