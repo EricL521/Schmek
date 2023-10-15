@@ -4,8 +4,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Client from './(game-logic)/Client';
 
+import './themes.css';
 import styles from './client-page.module.css';
-import themes from './themes.module.css';
 
 import HomeScreen from './(components)/(home-screen)/home-screen';
 import ThemeManager from './(components)/theme-manager';
@@ -56,7 +56,7 @@ export default function ClientPage() {
 	};
 	
 	return (
-		<main id={styles.main} className={themes[actualTheme]}>
+		<main id={styles.main} className={actualTheme}>
 			<div id={styles.content}>
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'}/>
 
