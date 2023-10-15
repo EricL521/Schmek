@@ -11,8 +11,9 @@ import BoardRow from "./board-row";
 export default function Board({ boardState, headPos, tileSize }) {
 	// offset board to make headPos the center
 	const boardStyle = useMemo(() => ({
-		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'px )',
-		top: 'calc( 50% - ' + (headPos[1] + 0.5) * tileSize + 'px )',
+		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'vh )',
+		top: 'calc( 50% - ' + (headPos[1] + 0.5) * tileSize + 'vh )',
+		boxShadow: '0 0 ' + 5*tileSize + 'vh ' + 5*tileSize + 'vh var(--secondary-color)',
 	}), [headPos, tileSize]);
 	
 	// generate table

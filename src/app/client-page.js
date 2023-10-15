@@ -65,7 +65,7 @@ export default function ClientPage() {
 				:  (currentPage == 'loading-screen')?
 					<LoadingScreen />
 				: (currentPage == 'game-screen')?
-					<GameScreen client={client} tileSize={50}/>
+					<GameScreen client={client} tileSize={5}/>
 				: null}
 				
 			</div>

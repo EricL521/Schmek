@@ -2,11 +2,17 @@
 	position: absolute;
 	transition: all 0.5s ease;
 
+	width: min-content;
+	height: min-content;
+
 	border-collapse: collapse;
 }
 
 .row {
 	display: inline-block;
+
+	width: max-content;
+	height: min-content;
 }
 
 .tile {

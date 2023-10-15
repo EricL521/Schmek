@@ -24,12 +24,6 @@ class Game {
 		return [board, emptyTiles];
 	}
 
-	// returns a random empty tile
-	getRandomEmptyTile() {
-		const emptyTilesArray = Array.from(this.emptyTiles);
-		return emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)];
-	}
-
 	// adds a snake to the game
 	// returns snake
 	addSnake(socket, name, color) {
@@ -70,14 +64,23 @@ class Game {
 
 			let [snakeTileChanges, newHeadPos] = snake.updateHead();
 
-			// update tail depending on what the head has moved into
 			const [x, y] = newHeadPos;
-			const headTile = this.board[y][x];
-			if (headTile.type === null)
-				snakeTileChanges.push(...snake.updateTail());
-			// if it has, generate new food
-			else if (headTile.type === "food") this.generateFood();
-			// at this point, snake dies
+			// if snake is in bounds, check if it has hit anything
+			if (this.isInBounds(newHeadPos)) {
+				const headTile = this.board[y][x];
+				if (headTile.type === null) // snake hit empty tile
+					snakeTileChanges.push(...snake.updateTail());
+				// snake hit food
+				else if (headTile.type === "food") this.generateFood();
+				// if it's not any of those, the snake dies
+				else {
+					snake.alive = false;
+					// also undo head update and snakeTileChanges
+					snake.removeHead();
+					snakeTileChanges = [];
+				}
+			}
+			// if it's not in bounds, the snake dies
 			else {
 				snake.alive = false;
 				// also undo head update and snakeTileChanges
@@ -112,6 +115,13 @@ class Game {
 			snake.sendGameUpdate(tileChanges);
 	}
 
+	// position is [x, y]
+	// returns true if position is in bounds
+	isInBounds(position) {
+		const [x, y] = position;
+		return x >= 0 && x < this.board[0].length && y >= 0 && y < this.board.length;
+	}
+
 	// generates numFood food tiles
 	generateFood(numFood = 1) {
 		const tileChanges = [];
@@ -121,6 +131,11 @@ class Game {
 		}
 		this.updateBoard(tileChanges);
 		this.updatePlayers(tileChanges);
+	}
+	// returns a random empty tile
+	getRandomEmptyTile() {
+		const emptyTilesArray = Array.from(this.emptyTiles);
+		return emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)];
 	}
 }
 

@@ -4,8 +4,8 @@ import style from "./board.module.css";
 
 export default function BoardRow({ row, tileSize }) {
 	const getTileStyle = (tile) => ({
-		width: tileSize,
-		height: tileSize,
+		width: tileSize + 'vh',
+		height: tileSize + 'vh',
 		backgroundColor: tile.color,
 	});
 	const getTileKey = (tile) => tile.position.join(',');
@@ -16,9 +16,7 @@ export default function BoardRow({ row, tileSize }) {
 	);
 
 	return (
-		<tr style={{
-			width: tileSize * row.length + 'px'
-		}} className={style['row']}>
+		<tr className={style['row']}>
 			{tiles}
 		</tr>
 	);
