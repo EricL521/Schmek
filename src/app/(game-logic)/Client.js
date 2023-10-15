@@ -21,6 +21,9 @@ class Client extends EventEmitter {
 
 		this.boardState;
 		this.headPos;
+
+		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
+		this.initializeClient();
 	}
 	get connected() { return this.socket.connected; }
 	disconnect() { this.socket.disconnect(); }
@@ -32,6 +35,16 @@ class Client extends EventEmitter {
 			this.headPos = headPos;
 
 			this.emit("gameUpdate", this.boardState, this.headPos);
+		});
+	}
+	// adds listeners for this client's events
+	initializeClient() {
+		this.on("direction", (x, y) => {
+			// if direction is already set, don't send it again
+			if (this.direction[0] == x && this.direction[1] == y) return;
+			
+			this.direction = [x, y];
+			this.socket.emit("direction", x, y);
 		});
 	}
 
@@ -62,10 +75,10 @@ class Client extends EventEmitter {
 			this.boardState[y][x] = tile;
 		}
 	}
-	// called when user presses a key, and sends it to the server
+	// called when user presses a key, and emits necessary events
 	keyPress(key) {
 		const action = this.controls.get(key);
-		if (action) this.socket.emit(action[0], ...action.slice(1));
+		if (action) this.emit(action[0], ...action.slice(1));
 	}
 }
 
