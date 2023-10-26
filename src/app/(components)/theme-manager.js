@@ -3,14 +3,11 @@
 // sets theme to light or dark mode
 'use client';
 
+import { unFocus } from './unFocus';
+
 import style from './theme-manager.module.css';
 
 export default function ThemeManager({theme, setTheme, autoHide = true}) {
-	// unfocuses active element if it wasn't selected with tab
-	const unFocus = () => {
-		if (!document.activeElement.matches("*:focus-visible"))
-			document.activeElement.blur();
-	};
 
 	return (
 		<div id={style["theme-manager"]} className={autoHide? null: style["visible"]}>

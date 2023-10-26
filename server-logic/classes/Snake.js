@@ -10,15 +10,20 @@ class Snake {
 		this.alive = true;
 		// body is an array of Tile objects, with the tail at index 0
 		this.body = body;
+		// currentDirection is the direction the snake last moved
+		this.currentDirection = null;
 		this.setDirection(direction, true); // [x, y]
 	}
 
 	setDirection(newDirection, initial) {
+		// if newDirection is the opposite of prevDirection, don't change direction
+		if (this.currentDirection && (newDirection[0] == -this.currentDirection[0] && newDirection[1] == -this.currentDirection[1])) return;
+
 		const magnitude = Math.abs(newDirection[0] + newDirection[1]);
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
-			this.direction = newDirection;
+			this.newDirection = newDirection;
 	}
-	get speed() { return Math.abs(this.direction[0] + this.direction[1]); }
+	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
 
 	// returns [tileChanges, newHeadPos]
 	updateHead() {
@@ -30,9 +35,12 @@ class Snake {
 			// update body
 			// add new head
 			const oldHeadPos = this.head.position;
-			const newHeadPos = [oldHeadPos[0] + this.direction[0], oldHeadPos[1] + this.direction[1]];
+			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];
 			this.body.push(new Tile(newHeadPos, "snake", this.color));
 			tileChanges.push(this.head); // add new head to tileChanges
+
+			// update currentDirection
+			this.currentDirection = this.newDirection;
 		}
 
 		// return all TileChanges, and new head position
@@ -61,6 +69,15 @@ class Snake {
 	}
 	get head() { return this.body[this.body.length - 1]; }
 	get tail() { return this.body[0]; }
+
+	// kills snake
+	kill() {
+		this.alive = false;
+		// send death message to client
+		this.socket.emit("death", {
+			length: this.body.length
+		});
+	}
 
 	// sends game updates to client
 	// should be an array of Tile objects

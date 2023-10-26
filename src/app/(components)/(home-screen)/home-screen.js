@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react';
+import { unFocus } from '../unFocus';
 
 import styles from './home.module.css'
 
@@ -19,12 +20,6 @@ export default function HomeScreen({joinGame}) {
 		// set color and update localStorage
 		setColor(newColor);
 		localStorage.setItem('color', newColor);
-	};
-
-	// unfocuses active element if it wasn't selected with tab
-	const unFocus = () => {
-		if (!document.activeElement.matches("*:focus-visible"))
-			document.activeElement.blur();
 	};
 
 	return (

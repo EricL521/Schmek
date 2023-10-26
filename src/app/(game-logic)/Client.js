@@ -36,6 +36,8 @@ class Client extends EventEmitter {
 
 			this.emit("gameUpdate", this.boardState, this.headPos);
 		});
+
+		this.socket.on("death", (data) => this.emit("death", data) );
 	}
 	// adds listeners for this client's events
 	initializeClient() {

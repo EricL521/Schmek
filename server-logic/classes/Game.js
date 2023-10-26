@@ -8,6 +8,7 @@ class Game {
 		// board is a 2d array of Tile objects, emptyTiles is a set of positions
 		[this.board, this.emptyTiles] = this.initializeBoard(dimensions);
 		this.snakes = new Map(); // maps socket to snake
+		this.deadSnakes = new Set(); // stores dead snakes
 		
 		// generate food
 		this.generateFood(numFood);
@@ -80,7 +81,7 @@ class Game {
 				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
 				else {
-					snake.alive = false;
+					this.killSnake(snake);
 					// also undo head update and snakeTileChanges
 					snake.removeHead();
 					snakeTileChanges = [];
@@ -88,7 +89,7 @@ class Game {
 			}
 			// if it's not in bounds, the snake dies
 			else {
-				snake.alive = false;
+				this.killSnake(snake);
 				// also undo head update and snakeTileChanges
 				snake.removeHead();
 				snakeTileChanges = [];
@@ -102,6 +103,13 @@ class Game {
 		this.updateBoard(tileChanges);
 		// send tileChanges to all snakes
 		this.updatePlayers(tileChanges);
+	}
+	killSnake(snake) {
+		// kill snake
+		snake.kill();
+		// remove snake from snakes and add to deadSnakes
+		this.snakes.delete(snake.socket);
+		this.deadSnakes.add(snake);
 	}
 	// updates board and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {

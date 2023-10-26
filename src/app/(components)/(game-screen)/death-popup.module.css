@@ -1,0 +1,51 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: transform, border, background-color, color;
+	backface-visibility: hidden;
+}
+.interactive:hover, .interactive:focus-visible, .interactive:focus-within {
+	transform: scale(1.05);
+}
+
+#death-popup {
+	width: 60vh;
+	height: 75vh;
+	z-index: 1000;
+	background-color: var(--background-color-2);
+	opacity: 0.9;
+	border-radius: 5vh;
+	border: 2px solid var(--text-color);
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+}
+
+#text-div {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+}
+
+#death-popup button {
+	width: 50%;
+	height: 50px;
+	border-radius: 100vh;
+	border: 1px solid var(--text-color);
+	background-color: var(--primary-color);
+
+	cursor: pointer;
+
+	transition: all 0.25s ease-in-out;
+	backface-visibility: hidden;
+
+	font-size: 25px;
+}
+#death-popup button:hover, #death-popup button:focus-visible {
+	transform: scale(1.1);
+}
+#death-popup button:active {
+	transform: scale(1.05);
+}
