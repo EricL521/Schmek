@@ -19,6 +19,10 @@ class Client extends EventEmitter {
 		this.socket = io();
 		this.initializeSocket();
 
+		this.boardState;
+		this.headPos;
+
+		this.alive = false; // don't update direction if dead
 		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
 		this.initializeClient();
 	}
@@ -28,19 +32,28 @@ class Client extends EventEmitter {
 	// add listeners for socket events
 	initializeSocket() {
 		this.socket.on("gameUpdate", (tileChanges, headPos) => {
-			this.emit("gameUpdate", tileChanges, headPos);
+			// update board state & head position
+			this.updateBoard(tileChanges);
+			this.headPos = headPos;
+
+			this.emit("gameUpdate", this.boardState, this.headPos);
 		});
 
-		this.socket.on("death", (data) => this.emit("death", data) );
+		this.socket.on("death", (data) => {
+			this.alive = false;
+
+			this.emit("death", data);
+		});
 	}
 	// adds listeners for this client's events
 	initializeClient() {
-		this.on("direction", (x, y) => {
-			// if direction is already set, don't send it again
-			if (this.direction[0] == x && this.direction[1] == y) return;
+		this.on("direction", ([x, y]) => {
+			// if that direction is already set or snake is dead, don't send it
+			if (!this.alive || (this.direction[0] == x && this.direction[1] == y) ) return;
 			
-			this.direction = [x, y];
-			this.socket.emit("direction", x, y);
+			this.socket.emit("direction", [x, y], ([x, y]) => {
+				this.direction = [x, y]; // callback to make sure server got it
+			});
 		});
 	}
 
@@ -60,7 +73,11 @@ class Client extends EventEmitter {
 	joinGameFunction(name, color) {
 		// send name to server
 		this.socket.emit("join", name, color, (boardState, headPos) => {
-			// in call back initialize board
+			// snake is now alive, also reset direction
+			this.alive = true;
+			this.direction = [0, 0];
+
+			// initialize board state and head position
 			this.boardState = boardState;
 			this.headPos = headPos;
 
@@ -73,6 +90,14 @@ class Client extends EventEmitter {
 	keyPress(key) {
 		const action = this.controls.get(key);
 		if (action) this.emit(action[0], ...action.slice(1));
+	}
+
+	// applies tile changes to board state
+	updateBoard(tileChanges) {
+		for (const tile of tileChanges) {
+			const [x, y] = tile.position;
+			this.boardState[y][x] = tile;
+		}
 	}
 }
 
