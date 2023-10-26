@@ -19,9 +19,6 @@ class Client extends EventEmitter {
 		this.socket = io();
 		this.initializeSocket();
 
-		this.boardState;
-		this.headPos;
-
 		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
 		this.initializeClient();
 	}
@@ -31,10 +28,7 @@ class Client extends EventEmitter {
 	// add listeners for socket events
 	initializeSocket() {
 		this.socket.on("gameUpdate", (tileChanges, headPos) => {
-			this.updateBoard(tileChanges);
-			this.headPos = headPos;
-
-			this.emit("gameUpdate", this.boardState, this.headPos);
+			this.emit("gameUpdate", tileChanges, headPos);
 		});
 
 		this.socket.on("death", (data) => this.emit("death", data) );
@@ -52,31 +46,29 @@ class Client extends EventEmitter {
 
 	// if called before connect, will be called when connected
 	joinGame(name, color) {
-		// make another function so we can reuse the code below
-		const joinGameFunction = () => {
-			// send name to server
-			this.socket.emit("join", name, color, (boardState, headPos) => {
-				// in call back initialize board
-				this.boardState = boardState;
-				this.headPos = headPos;
-
-				this.emit("boardState", boardState, headPos);
-				this.emit("boardInitialized");
-			});
-		};
+		this.name = name;
+		this.color = color;
 
 		// either call function, or add listener for connect
-		if (this.connected) joinGameFunction();
-		else this.once("connect", joinGameFunction.bind(this));
+		if (this.connected) this.joinGameFunction(name, color);
+		else this.once("connect", this.joinGameFunction.bind(this)(name, color));
 	}
+	// sends message to server to respawn
+	respawn() {
+		this.joinGameFunction(this.name, this.color);
+	}
+	joinGameFunction(name, color) {
+		// send name to server
+		this.socket.emit("join", name, color, (boardState, headPos) => {
+			// in call back initialize board
+			this.boardState = boardState;
+			this.headPos = headPos;
 
-	// applies tile changes to board state
-	updateBoard(tileChanges) {
-		for (const tile of tileChanges) {
-			const [x, y] = tile.position;
-			this.boardState[y][x] = tile;
-		}
-	}
+			this.emit("boardState", boardState, headPos);
+			this.emit("boardInitialized");
+		});
+	} 
+
 	// called when user presses a key, and emits necessary events
 	keyPress(key) {
 		const action = this.controls.get(key);

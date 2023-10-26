@@ -8,6 +8,7 @@ class Game {
 		// board is a 2d array of Tile objects, emptyTiles is a set of positions
 		[this.board, this.emptyTiles] = this.initializeBoard(dimensions);
 		this.snakes = new Map(); // maps socket to snake
+		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
 		this.deadSnakes = new Set(); // stores dead snakes
 		
 		// generate food
@@ -42,7 +43,20 @@ class Game {
 		const snake = new Snake(socket, name, color, body, direction);
 		this.snakes.set(socket, snake);
 
+		// add socket to sockets
+		this.sockets.add(socket);
+
 		return snake;
+	}
+	killSnake(socket) {
+		const snake = this.snakes.get(socket);
+		if (!snake) return; // if snake doesn't exist, return
+
+		// kill snake
+		snake.kill();
+		// remove snake from snakes and add to deadSnakes
+		this.snakes.delete(socket);
+		this.deadSnakes.add(snake);
 	}
 	getSnake(socket) { return this.snakes.get(socket); }
 
@@ -81,7 +95,7 @@ class Game {
 				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
 				else {
-					this.killSnake(snake);
+					this.killSnake(snake.socket);
 					// also undo head update and snakeTileChanges
 					snake.removeHead();
 					snakeTileChanges = [];
@@ -89,7 +103,7 @@ class Game {
 			}
 			// if it's not in bounds, the snake dies
 			else {
-				this.killSnake(snake);
+				this.killSnake(snake.socket);
 				// also undo head update and snakeTileChanges
 				snake.removeHead();
 				snakeTileChanges = [];
@@ -104,13 +118,6 @@ class Game {
 		// send tileChanges to all snakes
 		this.updatePlayers(tileChanges);
 	}
-	killSnake(snake) {
-		// kill snake
-		snake.kill();
-		// remove snake from snakes and add to deadSnakes
-		this.snakes.delete(snake.socket);
-		this.deadSnakes.add(snake);
-	}
 	// updates board and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
@@ -123,10 +130,15 @@ class Game {
 				this.emptyTiles.delete(tile.positionString);
 		}
 	}
-	// sends out tileChanges to all snakes
+	// sends out tileChanges to all players
 	updatePlayers(tileChanges) {
-		for (const snake of this.snakes.values())
-			snake.sendGameUpdate(tileChanges);
+		for (const socket of this.sockets) {
+			const snake = this.snakes.get(socket);
+			if (snake)
+				snake.sendGameUpdate(tileChanges);
+			else
+				socket.emit("gameUpdate", tileChanges, null);
+		}
 	}
 
 	// position is [x, y]

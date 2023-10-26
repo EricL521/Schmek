@@ -17,9 +17,9 @@ export default function Board({ boardState, headPos, tileSize }) {
 	}), [headPos, tileSize]);
 	
 	// generate table
-	const rows = boardState.map((row, index) =>
+	const rows = useMemo(() => boardState.map((row, index) =>
 		<BoardRow key={index} row={row} tileSize={tileSize} />
-	);
+	), [boardState, tileSize]);
 	return (
 		<table style={boardStyle} id={style['board']}>
 			<tbody>
