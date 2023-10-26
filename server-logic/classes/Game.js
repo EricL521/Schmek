@@ -152,7 +152,7 @@ class Game {
 	generateFood(numFood = 1) {
 		const tileChanges = [];
 		for (let i = 0; i < numFood; i++) {
-			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.9);
+			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.8);
 			tileChanges.push(food);
 
 			// apply changes to board to update emptyTiles

@@ -7,6 +7,7 @@ export default function BoardRow({ row, tileSize }) {
 		width: tileSize + 'vh',
 		height: tileSize + 'vh',
 		backgroundColor: tile.color,
+		scale: tile.size !== 1 ? tile.size : null,
 	});
 	const getTileKey = (tile) => tile.position.join(',');
 	
