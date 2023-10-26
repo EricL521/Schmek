@@ -76,9 +76,7 @@ export default function GameScreen({ client, tileSize }) {
 
 			<Board boardState={boardState} headPos={headPos} tileSize={tileSize}/>
 
-			{(dead)? 
-				<DeathPopup stats={deathData} respawn={respawn}/> 
-			: null}
+			<DeathPopup show={dead} stats={deathData} respawn={respawn}/> 
 		</div>
 	);
 };
