@@ -25,6 +25,23 @@ class Snake {
 	}
 	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
 
+	// reverses entire snake
+	// returns [newHeadPos, newDirection]
+	reverse() {
+		this.body.reverse();
+
+		// set current direction and newDirection to the direction of the new head
+		this.currentDirection = this.body[this.body.length - 2].direction.map(x => -x);
+		this.setDirection(this.head.direction.map(x => -x));
+
+		// reverse direction of each Tile
+		for (let i = this.body.length - 1; i >= 1; i--)
+			this.body[i].direction = this.body[i - 1].direction.map(x => -x);
+		this.body[0].direction = this.body[0].direction.map(x => -x);
+
+		return [this.head.position, this.newDirection];
+	}
+
 	// returns tileChanges
 	// adds round to old head
 	updateOldHead() {
@@ -63,7 +80,7 @@ class Snake {
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];
-			this.body.push(new Tile(newHeadPos, "snake", this.color));
+			this.body.push(new Tile(newHeadPos, "snake", this.color, null, null, this.newDirection));
 			tileChanges.push(this.head); // add new head to tileChanges
 
 			// update currentDirection

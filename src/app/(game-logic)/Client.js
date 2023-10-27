@@ -8,6 +8,11 @@ const defaultControls = new Map([
 	["ArrowDown", ["direction", [0, 1]]],
 	["ArrowLeft", ["direction", [-1, 0]]],
 	["ArrowRight", ["direction", [1, 0]]],
+	["w", ["direction", [0, -1]]],
+	["s", ["direction", [0, 1]]],
+	["a", ["direction", [-1, 0]]],
+	["d", ["direction", [1, 0]]],
+	[" ", ["reverseSnake"]]
 ]);
 
 class Client extends EventEmitter {
@@ -55,6 +60,15 @@ class Client extends EventEmitter {
 				this.direction = [x, y]; // callback to make sure server got it
 			});
 		});
+
+		this.on("reverseSnake", () => {
+			this.socket.emit("reverseSnake", (headPos, direction) => {
+				this.headPos = headPos;
+				this.direction = direction;
+	
+				this.emit("gameUpdate", null, this.headPos);
+			});
+		});
 	}
 
 	// if called before connect, will be called when connected
@@ -81,7 +95,7 @@ class Client extends EventEmitter {
 			this.boardState = boardState;
 			this.headPos = headPos;
 
-			this.emit("boardState", boardState, headPos);
+			this.emit("initialState", boardState, headPos);
 			this.emit("boardInitialized");
 		});
 	} 

@@ -11,9 +11,8 @@ export default function GameScreen({ client, tileSize }) {
 	// add listeners for client events
 	useEffect(() => {
 		const gameUpdateListener = (boardState, headPos) => {
-			setBoardState([... boardState]);
-			if (headPos)
-				setHeadPos([... headPos]);
+			if (boardState) setBoardState([... boardState]);
+			if (headPos) setHeadPos([... headPos]);
 		};
 		// add listener for when board is updated
 		client.on("gameUpdate", gameUpdateListener);
@@ -41,7 +40,7 @@ export default function GameScreen({ client, tileSize }) {
 	// respawn function
 	const respawn = () => {
 		// add listeners for when board is updated and client respawns
-		client.once("boardState", (boardState, headPos) => {
+		client.once("initialState", (boardState, headPos) => {
 			setBoardState(boardState);
 			setHeadPos(headPos);
 		});
