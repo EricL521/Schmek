@@ -78,19 +78,19 @@ class Game {
 		for (const snake of this.snakes.values()) {
 			if (!snake.alive || snake.speed === 0) continue; // skip dead snakes, and non-moving snakes
 
+			// update old head (NOTE: this ALWAYS updates tileChanges)
+			tileChanges.push(...snake.updateOldHead());
+
 			let [snakeTileChanges, newHeadPos] = snake.updateHead();
 
 			const [x, y] = newHeadPos;
 			// if snake is in bounds, check if it has hit anything
 			if (this.isInBounds(newHeadPos)) {
 				const newHeadTile = this.board[y][x];
-				if (newHeadTile.type === null) // snake hit empty tile
-					snakeTileChanges.push(...snake.updateTail());
+				// if snake hit empty tile
+				if (newHeadTile.type === null) snakeTileChanges.push(...snake.updateTail());
 				// if snake hits its own tail, it doesn't die
-				else if (newHeadTile.positionString === snake.tail.positionString) {
-					snake.updateTail();
-					snakeTileChanges = [];
-				}
+				else if (newHeadTile.positionString === snake.tail.positionString) snake.updateTail();
 				// snake hit food
 				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
@@ -152,7 +152,7 @@ class Game {
 	generateFood(numFood = 1) {
 		const tileChanges = [];
 		for (let i = 0; i < numFood; i++) {
-			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.8);
+			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.8, [25, 25, 25, 25]);
 			tileChanges.push(food);
 
 			// apply changes to board to update emptyTiles

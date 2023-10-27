@@ -25,6 +25,34 @@ class Snake {
 	}
 	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
 
+	// returns tileChanges
+	// adds round to old head
+	updateOldHead() {
+		// keep track of changed Tiles
+		const tileChanges = [];
+
+		// only update if snake is moving
+		if (this.speed !== 0) {
+			const oldHead = this.head;
+			// add rounded corner to old head, depending on current direction and new direction
+			if (this.currentDirection) {
+				// NOTE: y is inverted, so 1 is down, -1 is up
+				const deltaDirection = [
+					this.newDirection[0] - this.currentDirection[0],
+					this.newDirection[1] - this.currentDirection[1]
+				];
+				oldHead.borderRadius = [
+					deltaDirection[0] == 1 && deltaDirection[1] == 1 ? 100 : 0,
+					deltaDirection[0] == -1 && deltaDirection[1] == 1 ? 100 : 0,
+					deltaDirection[0] == -1 && deltaDirection[1] == -1 ? 100 : 0,
+					deltaDirection[0] == 1 && deltaDirection[1] == -1 ? 100 : 0
+				];
+				tileChanges.push(oldHead); // add old head to tileChanges
+			}
+		}
+
+		return tileChanges;
+	}
 	// returns [tileChanges, newHeadPos]
 	updateHead() {
 		// keep track of changed Tiles
@@ -32,7 +60,6 @@ class Snake {
 
 		// only update if snake is moving
 		if (this.speed !== 0) {
-			// update body
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];

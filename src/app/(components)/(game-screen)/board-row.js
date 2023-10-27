@@ -8,8 +8,9 @@ export default function BoardRow({ row, tileSize }) {
 		height: tileSize + 'vh',
 		backgroundColor: tile.color,
 		scale: tile.size !== 1 ? tile.size : null,
+		borderRadius: tile.borderRadius.map(x => x + '%').join(' ')
 	});
-	const getTileKey = (tile) => tile.position.join(',');
+	const getTileKey = (tile) => tile.type + ' ' + tile.position.join(',');
 	
 	// generate row tiles
 	const tiles = row.map(tile => 
