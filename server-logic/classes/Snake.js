@@ -43,14 +43,14 @@ class Snake {
 	}
 
 	// returns tileChanges
-	// adds round to old head
-	updateOldHead() {
+	// adds round to current head
+	updateCurrentHeadBorderRadius() {
 		// keep track of changed Tiles
 		const tileChanges = [];
 
 		// only update if snake is moving
 		if (this.speed !== 0) {
-			const oldHead = this.head;
+			const head = this.head;
 			// add rounded corner to old head, depending on current direction and new direction
 			if (this.currentDirection) {
 				// NOTE: y is inverted, so 1 is down, -1 is up
@@ -58,13 +58,13 @@ class Snake {
 					this.newDirection[0] - this.currentDirection[0],
 					this.newDirection[1] - this.currentDirection[1]
 				];
-				oldHead.borderRadius = [
+				head.borderRadius = [
 					deltaDirection[0] == 1 && deltaDirection[1] == 1 ? 100 : 0,
 					deltaDirection[0] == -1 && deltaDirection[1] == 1 ? 100 : 0,
 					deltaDirection[0] == -1 && deltaDirection[1] == -1 ? 100 : 0,
 					deltaDirection[0] == 1 && deltaDirection[1] == -1 ? 100 : 0
 				];
-				tileChanges.push(oldHead); // add old head to tileChanges
+				tileChanges.push(head); // add old head to tileChanges
 			}
 		}
 
@@ -114,16 +114,24 @@ class Snake {
 
 			// update new tail border radius
 			const tail = this.tail;
-			const nextTail = this.body[1];
+			let tailDirection = tail.direction;
+			let nextTailDirection = this.body[1].direction;
+			let defaultBorderRadius = tail.borderRadius; // what it defaults to if no rounded corners are needed
+			// if tailDirection is zero, use the first non-zero direction, from the tail
+			if (tailDirection[0] + tailDirection[1] == 0)
+				for (let i = 1; i < this.body.length; i++)
+					if (this.body[i].direction[0] + this.body[i].direction[1] != 0) {
+						tailDirection = this.body[i].direction;
+						nextTailDirection = this.body[i - 1].direction;
+						// also make default border radius 0
+						defaultBorderRadius = [0, 0, 0, 0];
+						break;
+					}
 			tail.borderRadius = [
-				tail.borderRadius[0] !== 0 ? tail.borderRadius[0] : 
-					(tail.direction[0] == 1 && nextTail.direction[1] !== -1) || (tail.direction[1] == 1 && nextTail.direction[0] !== -1) ? 25 : 0,
-				tail.borderRadius[1] !== 0 ? tail.borderRadius[1] :
-					(tail.direction[0] == -1 && nextTail.direction[1] !== -1) || (tail.direction[1] == 1 && nextTail.direction[0] !== 1) ? 25 : 0,
-				tail.borderRadius[2] !== 0 ? tail.borderRadius[2] :
-					(tail.direction[0] == -1 && nextTail.direction[1] !== 1) || (tail.direction[1] == -1 && nextTail.direction[0] !== 1) ? 25 : 0,
-				tail.borderRadius[3] !== 0 ? tail.borderRadius[3] :
-					(tail.direction[0] == 1 && nextTail.direction[1] !== 1) || (tail.direction[1] == -1 && nextTail.direction[0] !== -1) ? 25 : 0
+				(tailDirection[0] == 1 && nextTailDirection[1] !== -1) || (tailDirection[1] == 1 && nextTailDirection[0] !== -1) ? 25 : defaultBorderRadius[0],
+				(tailDirection[0] == -1 && nextTailDirection[1] !== -1) || (tailDirection[1] == 1 && nextTailDirection[0] !== 1) ? 25 : defaultBorderRadius[1],
+				(tailDirection[0] == -1 && nextTailDirection[1] !== 1) || (tailDirection[1] == -1 && nextTailDirection[0] !== 1) ? 25 : defaultBorderRadius[2],
+				(tailDirection[0] == 1 && nextTailDirection[1] !== 1) || (tailDirection[1] == -1 && nextTailDirection[0] !== -1) ? 25 : defaultBorderRadius[3]
 			];
 			// add new tail to tileChanges
 			tileChanges.push(tail);

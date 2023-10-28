@@ -32,7 +32,7 @@ class Game {
 	addSnake(socket, name, color, initialLength = 3) {
 		// randomly generate a head position for the snake
 		const headPos = this.getRandomEmptyPos();
-		const body = Array(initialLength).fill(new Tile(headPos, "snake", color)); // body is 3 tiles long
+		const body = Array(initialLength).fill(new Tile(headPos, "snake", color, null, [50, 50, 50, 50])); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
 		// update board and other snakes
@@ -79,7 +79,7 @@ class Game {
 			if (!snake.alive || snake.speed === 0) continue; // skip dead snakes, and non-moving snakes
 
 			// update old head (NOTE: this ALWAYS updates tileChanges)
-			tileChanges.push(...snake.updateOldHead());
+			tileChanges.push(...snake.updateCurrentHeadBorderRadius());
 
 			let [snakeTileChanges, newHeadPos] = snake.updateHead();
 
