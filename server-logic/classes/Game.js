@@ -90,7 +90,7 @@ class Game {
 				// if snake hit empty tile
 				if (newHeadTile.type === null) snakeTileChanges.push(...snake.updateTail());
 				// if snake hits its own tail, it doesn't die
-				else if (newHeadTile.positionString === snake.tail.positionString) snake.updateTail();
+				else if (newHeadTile.positionString === snake.tail.positionString) snakeTileChanges.push(...snake.updateTail(false));
 				// snake hit food
 				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies

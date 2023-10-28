@@ -80,7 +80,12 @@ class Snake {
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];
-			this.body.push(new Tile(newHeadPos, "snake", this.color, null, null, this.newDirection));
+			this.body.push(new Tile(newHeadPos, "snake", this.color, null, [
+				this.newDirection[0] == -1 || this.newDirection[1] == -1 ? 50 : 0,
+				this.newDirection[0] == 1 || this.newDirection[1] == -1 ? 50 : 0,
+				this.newDirection[0] == 1 || this.newDirection[1] == 1 ? 50 : 0,
+				this.newDirection[0] == -1 || this.newDirection[1] == 1 ? 50 : 0
+			], this.newDirection));
 			tileChanges.push(this.head); // add new head to tileChanges
 
 			// update currentDirection
@@ -95,7 +100,7 @@ class Snake {
 		return [this.body.pop()];
 	}
 	// returns tileChanges
-	updateTail() {
+	updateTail(addRemovedTailToChanges = true) {
 		// keep track of changed Tiles
 		const tileChanges = [];
 
@@ -104,8 +109,24 @@ class Snake {
 			const oldTailPos = this.body.shift().position;
 			const newTailPos = this.tail.position;
 			// if new tail is not the same as old tail, add old tail to tileChanges
-			if (!(oldTailPos[0] == newTailPos[0] && oldTailPos[1] == newTailPos[1])) 
+			if (addRemovedTailToChanges && !(oldTailPos[0] == newTailPos[0] && oldTailPos[1] == newTailPos[1])) 
 				tileChanges.push(new Tile(oldTailPos, null, null));
+
+			// update new tail border radius
+			const tail = this.tail;
+			const nextTail = this.body[1];
+			tail.borderRadius = [
+				tail.borderRadius[0] !== 0 ? tail.borderRadius[0] : 
+					(tail.direction[0] == 1 && nextTail.direction[1] !== -1) || (tail.direction[1] == 1 && nextTail.direction[0] !== -1) ? 25 : 0,
+				tail.borderRadius[1] !== 0 ? tail.borderRadius[1] :
+					(tail.direction[0] == -1 && nextTail.direction[1] !== -1) || (tail.direction[1] == 1 && nextTail.direction[0] !== 1) ? 25 : 0,
+				tail.borderRadius[2] !== 0 ? tail.borderRadius[2] :
+					(tail.direction[0] == -1 && nextTail.direction[1] !== 1) || (tail.direction[1] == -1 && nextTail.direction[0] !== 1) ? 25 : 0,
+				tail.borderRadius[3] !== 0 ? tail.borderRadius[3] :
+					(tail.direction[0] == 1 && nextTail.direction[1] !== 1) || (tail.direction[1] == -1 && nextTail.direction[0] !== -1) ? 25 : 0
+			];
+			// add new tail to tileChanges
+			tileChanges.push(tail);
 		}
 
 		// return tileChanges
