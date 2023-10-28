@@ -5,7 +5,6 @@ module.exports = {
 		// if snake doesn't exist or is dead, do nothing
 		if ( !snake || !snake.alive ) return;
 
-		snake.setDirection(direction);
-		callback(direction);
+		callback(snake.setDirection(direction));
 	}
 };

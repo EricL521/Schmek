@@ -15,13 +15,17 @@ class Snake {
 		this.setDirection(direction, true); // [x, y]
 	}
 
+	// returns new direction, NOTE: may not equal the direction passed in, depending on the current direction
 	setDirection(newDirection, initial) {
 		// if newDirection is the opposite of prevDirection, don't change direction
-		if (this.currentDirection && (newDirection[0] == -this.currentDirection[0] && newDirection[1] == -this.currentDirection[1])) return;
+		if (this.currentDirection && (newDirection[0] == -this.currentDirection[0] && newDirection[1] == -this.currentDirection[1])) 
+			return this.newDirection;
 
 		const magnitude = Math.abs(newDirection[0] + newDirection[1]);
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
 			this.newDirection = newDirection;
+
+		return this.newDirection;
 	}
 	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
 
