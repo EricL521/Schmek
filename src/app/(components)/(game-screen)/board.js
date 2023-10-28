@@ -21,10 +21,8 @@ export default function Board({ boardState, headPos, tileSize }) {
 		<BoardRow key={index} row={row} tileSize={tileSize} />
 	), [boardState, tileSize]);
 	return (
-		<table style={boardStyle} id={style['board']}>
-			<tbody>
-				{rows}
-			</tbody>
-		</table>
+		<div style={boardStyle} id={style['board']}>
+			{rows}
+		</div>
 	);
 };

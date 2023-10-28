@@ -5,19 +5,23 @@
 	width: min-content;
 	height: min-content;
 
-	border-collapse: collapse;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
 }
 
 .row {
-	display: inline-block;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	justify-content: flex-start;
 
 	width: max-content;
 	height: min-content;
 }
 
 .tile {
-	display: inline-block;
-
 	padding: 0;
 	margin: 0;
 }
