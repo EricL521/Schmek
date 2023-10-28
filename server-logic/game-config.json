@@ -1,5 +1,5 @@
 {
 	"dimensions": [50, 50],
 	"numFood": 100,
-	"tps": 2.5
+	"tps": 3
 }
