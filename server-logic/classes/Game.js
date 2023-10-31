@@ -93,18 +93,20 @@ class Game {
 				else if (newHeadTile.type === "food") this.generateFood();
 				// if it's not any of those, the snake dies
 				else {
-					this.killSnake(snake.socket);
-					// also undo head update and snakeTileChanges
+					// undo head update and snakeTileChanges
 					snake.removeHead();
 					snakeTileChanges = [];
+					// kill snake
+					this.killSnake(snake.socket);
 				}
 			}
 			// if it's not in bounds, the snake dies
 			else {
-				this.killSnake(snake.socket);
-				// also undo head update and snakeTileChanges
+				// undo head update and snakeTileChanges
 				snake.removeHead();
 				snakeTileChanges = [];
+				// kill snake
+				this.killSnake(snake.socket);
 			}
 
 			// add snakeTileChanges to tileChanges
