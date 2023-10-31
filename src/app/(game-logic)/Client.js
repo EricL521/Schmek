@@ -142,15 +142,17 @@ class Client extends EventEmitter {
 		const actions = this.controls.get(key);
 		if (actions) actions.add(action);
 		else this.controls.set(key, new Set([action]));
-		this.controlsArray.push([key, action]);
+		this.controlsArray.unshift([key, action]);
 	}
 	removeKeybind(index) {
 		// remove action from controls
 		const key = this.controlsArray[index][0];
 		const action = this.controlsArray[index][1];
 		const actions = this.controls.get(key);
-		actions.delete(action);
-		if (actions.size == 0) this.controls.delete(key);
+		if (actions) {
+			actions.delete(action);
+			if (actions.size == 0) this.controls.delete(key);
+		}
 
 		// update controlsArray
 		this.controlsArray.splice(index, 1);

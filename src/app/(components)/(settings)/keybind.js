@@ -43,7 +43,7 @@ export default function Keybind({ actions, keybind, controls, setKeybind, remove
 		<tr className={[styles['keybind']].join(' ')}>
 			<td>
 				<button className={[keyListening && styles['listening'], styles['key-button'], styles['interactive']].join(' ')}
-				onClick={() => {setKeyListening(!keyListening); }} >
+				onClick={() => {setKeyListening(!keyListening); unFocus();}} >
 					{ keyListening? "press a key" :
 					keybind[0] == " " ? "Space" : keybind[0] }
 				</button>
@@ -53,7 +53,7 @@ export default function Keybind({ actions, keybind, controls, setKeybind, remove
 				onChange={(e) => {setKeybind(keybind[0], e.target.value); }} >
 					<option value="">None</option>
 					{actions.filter(
-						action => action == keybind[1] || !controls.get(keybind[0]).has(action)
+						action => action == keybind[1] || !controls.get(keybind[0])?.has(action)
 					).map(option => 
 						<option key={option} value={option}>{option}</option>
 					)}
@@ -61,7 +61,7 @@ export default function Keybind({ actions, keybind, controls, setKeybind, remove
 			</td>
 			<td>
 				<button className={[styles['close-button'], styles['interactive']].join(' ')}
-				onClick={removeKeybind}>
+				onClick={() => {removeKeybind(); unFocus();}}>
 					<p>x</p>
 				</button>
 			</td>
