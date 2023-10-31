@@ -8,7 +8,7 @@ import BoardRow from "./board-row";
 
 // boardstate is a 2d array of tiles{position[2], color}
 // headpos is just [x, y]
-export default function Board({ boardState, headPos, tileSize }) {
+export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 	// offset board to make headPos the center
 	const boardStyle = useMemo(() => ({
 		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'vh )',
@@ -26,28 +26,35 @@ export default function Board({ boardState, headPos, tileSize }) {
 
 		return () => window.removeEventListener('resize', resizeListener);
 	}, []);
-	// crop boardstate to only include tiles that are on screen
+	// crop boardstate to only include tiles that are on screen, when moving between oldHeadPos and headPos
 	// also get style for offsetting board b/c tiles we cropped off
 	const [croppedBoardState, boardCropOffset] = useMemo(() => {
 		// get tileSize in pixels
 		const tileSizePx = tileSize * windowSize[1] / 100;
 		// get number of tiles that fit on the screen left and right and up and down of head
-		const tilesX = 1 + Math.ceil(windowSize[0] / tileSizePx / 2);
-		const tilesY = 1 + Math.ceil(windowSize[1] / tileSizePx / 2);
+		const tilesX = Math.ceil(windowSize[0] / tileSizePx / 2);
+		const tilesY = Math.ceil(windowSize[1] / tileSizePx / 2);
+
+		// min and max y-index to be rendered
+		const minY = Math.max(0, Math.min(headPos[1] - tilesY, oldHeadPos[1] - tilesY));
+		const maxY = Math.min(boardState.length - 1, Math.max(headPos[1] + tilesY, oldHeadPos[1] + tilesY));
+		// min and max x-index to be rendered
+		const minX = Math.max(0, Math.min(headPos[0] - tilesX, oldHeadPos[0] - tilesX));
+		const maxX = Math.min(boardState[0].length - 1, Math.max(headPos[0] + tilesX, oldHeadPos[0] + tilesX));
 
 		// crop y, then x
-		const croppedBoardState = boardState.slice(Math.max(0, headPos[1] - tilesY), headPos[1] + tilesY + 1)
-			.map(row => row.slice(Math.max(0, headPos[0] - tilesX), headPos[0] + tilesX + 1));
+		const croppedBoardState = boardState.slice(minY, maxY + 1)
+			.map(row => row.slice(minX, maxX + 1));
 		// get offset for board
 		const boardCropOffset = {
-			marginLeft: Math.max(0, headPos[0] - tilesX) * tileSize + 'vh',
-			marginTop: Math.max(0, headPos[1] - tilesY) * tileSize + 'vh',
-			marginRight: Math.max(0, boardState[0].length - (headPos[0] + tilesX)) * tileSize + 'vh',
-			marginBottom: Math.max(0, boardState.length - (headPos[1] + tilesY)) * tileSize + 'vh',
+			marginLeft: minX * tileSize + 'vh',
+			marginTop: minY * tileSize + 'vh',
+			marginRight: (boardState[0].length - 1 - maxX) * tileSize + 'vh',
+			marginBottom: (boardState.length - 1 - maxY) * tileSize + 'vh',
 		};
 
 		return [croppedBoardState, boardCropOffset];
-	}, [boardState, headPos, tileSize, windowSize]);
+	}, [boardState, oldHeadPos, headPos, tileSize, windowSize]);
 	
 	// generate table
 	const rows = useMemo(() => croppedBoardState.map((row, index) =>

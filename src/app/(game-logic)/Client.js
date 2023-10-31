@@ -49,6 +49,8 @@ class Client extends EventEmitter {
 		this.initializeSocket();
 
 		this.boardState;
+		this.olderHeadPos;
+		this.oldHeadPos;
 		this.headPos;
 
 		this.alive = false; // don't update direction if dead
@@ -63,9 +65,13 @@ class Client extends EventEmitter {
 		this.socket.on("gameUpdate", (tileChanges, headPos) => {
 			// update board state & head position
 			this.updateBoard(tileChanges);
-			this.headPos = headPos;
+			if (headPos) {
+				this.olderHeadPos = this.oldHeadPos;
+				this.oldHeadPos = this.headPos;
+				this.headPos = headPos;
+			}
 
-			this.emit("gameUpdate", this.boardState, this.headPos);
+			this.emit("gameUpdate", this.boardState, this.headPos, this.olderHeadPos);
 		});
 
 		this.socket.on("death", (data) => {
@@ -120,6 +126,7 @@ class Client extends EventEmitter {
 
 			// initialize board state and head position
 			this.boardState = this.genBoard(dimensions, tiles);
+			this.oldHeadPos = headPos;
 			this.headPos = headPos;
 
 			this.emit("initialState", this.boardState, this.headPos);

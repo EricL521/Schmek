@@ -10,8 +10,9 @@ import DeathPopup from './death-popup';
 export default function GameScreen({ client, tileSize }) {
 	// add listeners for client events
 	useEffect(() => {
-		const gameUpdateListener = (boardState, headPos) => {
+		const gameUpdateListener = (boardState, headPos, oldHeadPos) => {
 			if (boardState) setBoardState([... boardState]);
+			if (oldHeadPos) setOldHeadPos([... oldHeadPos]);
 			if (headPos) setHeadPos([... headPos]);
 		};
 		// add listener for when board is updated
@@ -32,6 +33,7 @@ export default function GameScreen({ client, tileSize }) {
 	}, [client]);
 	// initialize board state and head position to client's
 	const [boardState, setBoardState] = useState(client?.boardState);
+	const [oldHeadPos, setOldHeadPos] = useState(client?.oldHeadPos);
 	const [headPos, setHeadPos] = useState(client?.headPos);
 	// store death data, and state
 	const [deathData, setDeathData] = useState(null);
@@ -54,7 +56,7 @@ export default function GameScreen({ client, tileSize }) {
 		<div id={styles['game-screen']}>
 			<UserInput client={client}/>
 
-			<Board boardState={boardState} headPos={headPos} tileSize={tileSize}/>
+			<Board boardState={boardState} oldHeadPos={oldHeadPos} headPos={headPos} tileSize={tileSize}/>
 
 			<DeathPopup show={dead} stats={deathData} respawn={respawn}/> 
 		</div>
