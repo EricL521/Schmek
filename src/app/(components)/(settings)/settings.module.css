@@ -1,0 +1,105 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: opacity, transform, bottom, left;
+	backface-visibility: hidden;
+}
+.interactive:hover, .interactive:focus-visible {
+	transform: scale(1.1);
+}
+
+#settings-icon {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+
+	height: 27.8px;
+	width: auto;
+	padding: 5px;
+
+	border-radius: 5px;
+}
+
+#settings-panel {
+	transition: 0.375s ease;
+	opacity: 0.85;
+
+	position: fixed;
+	left: calc(37.8px - 300px);
+	bottom: calc(37.8px - 350px);
+	z-index: 1000;
+
+	width: 300px;
+	height: 350px;
+	background-color: var(--background-color-2);
+	border-radius: 0 15px 0 0;
+	border: 2px var(--text-color);
+	border-style: solid solid none none;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+}
+#settings-panel:hover, #settings-panel:focus-within {
+	left: 0px;
+	bottom: 0px;
+
+	opacity: 1;
+	transform: none !important;
+}
+
+#keybinds-panel {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding-left: 10px;
+
+	width: 85%;
+	height: 50%;
+
+	border: 1px var(--text-color);
+	border-left-style: solid;
+}
+#keybinds-panel:hover, #keybinds-panel:focus-within {
+	transform: scale(1.05);
+}
+#keybinds-title {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+	margin-bottom: 5px;
+
+	width: 100%;
+}
+#keybinds-title h3 {
+	margin: 0;
+	padding: 5px;
+}
+#keybinds-title button {
+	border-radius: 100vh;
+	border: 1px var(--text-color) solid;
+	background-color: var(--primary-color);
+
+	cursor: pointer;
+	
+	padding: 2.5px 5px;
+}
+#keybinds-title button:hover, #keybinds-title button:focus-visible {
+	transform: scale(1.1);
+}
+#keybinds-title button:active {
+	transform: scale(1.05);
+}
+
+#keybinds {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+
+	width: 100%;
+
+	overflow-y: auto;
+}

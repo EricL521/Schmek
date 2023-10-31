@@ -1,0 +1,65 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: transform, background-color;
+	backface-visibility: hidden;
+}
+.interactive:hover, .interactive:focus-visible {
+	transform: scale(1.1);
+}
+
+.keybind {
+	width: 90%;
+	padding: 5px;
+}
+.keybind td {
+	text-align: center;
+}
+.keybind .key-button {
+	min-width: 50px;
+	height: 20px;
+	margin: 0;
+
+	border-radius: 100vh;
+	border: 1px var(--text-color) solid;
+
+	cursor: pointer;
+
+	background-color: var(--primary-color);
+}
+.keybind .key-button:active {
+	transform: scale(1.05);
+}
+.keybind .key-button.listening {
+	background-color: var(--secondary-color);
+}
+.keybind select {
+	background-color: var(--background-color);
+	border-radius: 2.5px;
+	border: 1px var(--text-color) solid;
+	font-size: 13.3333px; 
+
+	cursor: pointer;
+
+	appearance: none;
+}
+
+.close-button {
+	width: 20px;
+	height: 20px;
+	background-color: var(--secondary-color);
+	border-radius: 100vh;
+	border: 1px var(--text-color) solid;
+
+	cursor: pointer;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.close-button:active {
+	transform: scale(1.05);
+}
+.close-button p {
+	margin: 0;
+	padding: 0;
+}

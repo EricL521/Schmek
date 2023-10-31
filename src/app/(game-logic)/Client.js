@@ -1,25 +1,36 @@
 import io from 'socket.io-client';
 import { EventEmitter } from 'events';
 
-// maps key names to what they do
-// emits the first value, and passes the rest as arguments
+// map of actions to argument arrays, where first element is the name of the event
+const actions = new Map([
+	["moveUp", ["direction", [0, -1]]],
+	["moveDown", ["direction", [0, 1]]],
+	["moveLeft", ["direction", [-1, 0]]],
+	["moveRight", ["direction", [1, 0]]],
+	["reverseSnake", ["reverseSnake"]]
+]);
+
+// maps key names to actions
 const defaultControls = new Map([
-	["ArrowUp", ["direction", [0, -1]]],
-	["ArrowDown", ["direction", [0, 1]]],
-	["ArrowLeft", ["direction", [-1, 0]]],
-	["ArrowRight", ["direction", [1, 0]]],
-	["w", ["direction", [0, -1]]],
-	["s", ["direction", [0, 1]]],
-	["a", ["direction", [-1, 0]]],
-	["d", ["direction", [1, 0]]],
-	[" ", ["reverseSnake"]]
+	["ArrowUp", new Set(["moveUp"])],
+	["ArrowDown", new Set(["moveDown"])],
+	["ArrowLeft", new Set(["moveLeft"])],
+	["ArrowRight", new Set(["moveRight"])],
+	["w", new Set(["moveUp"])],
+	["s", new Set(["moveDown"])],
+	["a", new Set(["moveLeft"])],
+	["d", new Set(["moveRight"])],
+	[" ", new Set(["reverseSnake"])]
 ]);
 
 class Client extends EventEmitter {
+	static get actions () { return actions; }
+
 	constructor(controls) {
 		super();
 
 		this.controls = controls ?? defaultControls;
+		this.controlsArray = this.genControlsArray();
 
 		this.socket = io();
 		this.initializeSocket();
@@ -100,10 +111,59 @@ class Client extends EventEmitter {
 		});
 	} 
 
+	genControlsArray() {
+		const controlsArray = [];
+		for (const [key, actions] of this.controls) {
+			for (const action of actions) {
+				controlsArray.push([key, action]);
+			}
+		}
+		return controlsArray;
+	}
+	setKeybind(index, key, action) {
+		// remove old action from controls
+		const oldKey = this.controlsArray[index][0];
+		const oldAction = this.controlsArray[index][1];
+		if (oldKey == key && oldAction == action) return; // don't do anything if keybind is the same
+		const oldActions = this.controls.get(oldKey);
+		oldActions.delete(oldAction);
+		if (oldKey !== key && oldActions.size == 0) this.controls.delete(oldKey);
+
+		// update controlsArray and controls
+		const actions = this.controls.get(key);
+		// if action already is there, set action to "" instead
+		if (actions && actions.has(action)) action = "";
+		if (actions) actions.add(action);
+		else this.controls.set(key, new Set([action]));
+		this.controlsArray[index] = [key, action];
+	}
+	addKeybind(key, action) {
+		// update controlsArray and controls
+		const actions = this.controls.get(key);
+		if (actions) actions.add(action);
+		else this.controls.set(key, new Set([action]));
+		this.controlsArray.push([key, action]);
+	}
+	removeKeybind(index) {
+		// remove action from controls
+		const key = this.controlsArray[index][0];
+		const action = this.controlsArray[index][1];
+		const actions = this.controls.get(key);
+		actions.delete(action);
+		if (actions.size == 0) this.controls.delete(key);
+
+		// update controlsArray
+		this.controlsArray.splice(index, 1);
+	}
 	// called when user presses a key, and emits necessary events
 	keyPress(key) {
-		const action = this.controls.get(key);
-		if (action) this.emit(action[0], ...action.slice(1));
+		const actions = this.controls.get(key);
+		if (!actions) return;
+
+		for (const action of actions) {
+			const directions = Client.actions.get(action);
+			if (directions) this.emit(directions[0], ...directions.slice(1));
+		}
 	}
 
 	// applies tile changes to board state
