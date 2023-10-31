@@ -1,6 +1,8 @@
 import io from 'socket.io-client';
 import { EventEmitter } from 'events';
 
+import { Tile } from '../../../server-logic/classes/Tile';
+
 // map of actions to argument arrays, where first element is the name of the event
 const actions = new Map([
 	["moveUp", ["direction", [0, -1]]],
@@ -97,19 +99,35 @@ class Client extends EventEmitter {
 	}
 	joinGameFunction(name, color) {
 		// send name to server
-		this.socket.emit("join", name, color, (boardState, headPos) => {
+		this.socket.emit("join", name, color, (dimensions, tiles, headPos) => {
 			// snake is now alive, also reset direction
 			this.alive = true;
 			this.direction = [0, 0];
 
 			// initialize board state and head position
-			this.boardState = boardState;
+			this.boardState = this.genBoard(dimensions, tiles);
 			this.headPos = headPos;
 
-			this.emit("initialState", boardState, headPos);
+			this.emit("initialState", this.boardState, this.headPos);
 			this.emit("boardInitialized");
 		});
 	} 
+	genBoard(dimensions, tiles) {
+		const boardState = [];
+		for (let y = 0; y < dimensions[1]; y++) {
+			const row = [];
+			for (let x = 0; x < dimensions[0]; x++) {
+				row.push(new Tile([x, y]));
+			}
+			boardState.push(row);
+		}
+		for (const tile of tiles) {
+			const [x, y] = tile.position;
+			boardState[y][x] = tile;
+		}
+		
+		return boardState;
+	}
 
 	genControlsArray() {
 		const controlsArray = [];

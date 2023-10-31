@@ -1,7 +1,10 @@
 #board {
 	position: absolute;
 	transition: all 0.5s ease;
-
+}
+#board-crop-offset {
+	position: absolute;
+	
 	width: min-content;
 	height: min-content;
 

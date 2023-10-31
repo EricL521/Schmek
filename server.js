@@ -8,7 +8,9 @@ const {port, hostname} = require('./config');
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
  
+console.log("Preparing app...");
 app.prepare().then(() => {
+	console.log("Creating server...");
 	const server = createServer(async (req, res) => {
 		try {
 			// Be sure to pass `true` as the second argument to `url.parse`.

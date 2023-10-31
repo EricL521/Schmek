@@ -4,6 +4,9 @@ class Tile {
 		const [x, y] = positionString.split(",");
 		return [parseInt(x), parseInt(y)];
 	}
+	static positionToString(position) {
+		return position.toString();
+	}
 
 	// position is [x, y]
 	// x is going right, y is going down
@@ -21,7 +24,7 @@ class Tile {
 		this.type = type;
 	}
 
-	get positionString() { return this.position.toString(); }
+	get positionString() { return Tile.positionToString(this.position); }
 }
 
 module.exports = { Tile };

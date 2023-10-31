@@ -5,8 +5,10 @@ const { Tile } = require("./Tile.js");
 class Game {
 	// dimensions is an array of [width, height]
 	constructor(dimensions, numFood = 0) {
-		// board is a 2d array of Tile objects, emptyTiles is a set of positions
-		[this.board, this.emptyTiles] = this.initializeBoard(dimensions);
+		this.dimensions = dimensions;
+		// tiles is a map of positions to Tile objects
+		// emptyTiles is a set of positions
+		[this.tiles, this.emptyTiles] = this.initializeTiles(this.dimensions);
 		this.snakes = new Map(); // maps socket to snake
 		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
 		this.deadSnakes = new Set(); // stores dead snakes
@@ -14,17 +16,14 @@ class Game {
 		// generate food
 		this.generateFood(numFood);
 	}
-	initializeBoard(dimensions) {
-		const board = [];
+	get tilesArray() { return Array.from(this.tiles.values()); }
+	initializeTiles(dimensions) {
+		const tiles = new Map();
 		const emptyTiles = new Set();
-		for (let y = 0; y < dimensions[0]; y++) {
-			board.push([]);
-			for (let x = 0; x < dimensions[1]; x++) {
-				board[y].push(new Tile([x, y], null));
-				emptyTiles.add(board[y][x].positionString);
-			}
-		}
-		return [board, emptyTiles];
+		for (let y = 0; y < dimensions[0]; y++) 
+			for (let x = 0; x < dimensions[1]; x++) 
+				emptyTiles.add(Tile.positionToString([x, y]));
+		return [tiles, emptyTiles];
 	}
 
 	// adds a snake to the game
@@ -83,12 +82,11 @@ class Game {
 
 			let [snakeTileChanges, newHeadPos] = snake.updateHead();
 
-			const [x, y] = newHeadPos;
 			// if snake is in bounds, check if it has hit anything
 			if (this.isInBounds(newHeadPos)) {
-				const newHeadTile = this.board[y][x];
+				const newHeadTile = this.tiles.get(Tile.positionToString(newHeadPos));
 				// if snake hit empty tile
-				if (newHeadTile.type === null) snakeTileChanges.push(...snake.updateTail());
+				if (!newHeadTile) snakeTileChanges.push(...snake.updateTail());
 				// if snake hits its own tail, it doesn't die
 				else if (newHeadTile.positionString === snake.tail.positionString) snakeTileChanges.push(...snake.updateTail(false));
 				// snake hit food
@@ -121,13 +119,15 @@ class Game {
 	// updates board and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
-			const [x, y] = tile.position;
-			this.board[y][x] = tile;
-			
-			if (tile.color == null)
+			// update tiles and emptyTiles
+			if (tile.color == null) {
+				this.tiles.delete(tile.positionString);
 				this.emptyTiles.add(tile.positionString);
-			else
+			}
+			else {
+				this.tiles.set(tile.positionString, tile);
 				this.emptyTiles.delete(tile.positionString);
+			}
 		}
 	}
 	// sends out tileChanges to all players
@@ -145,7 +145,7 @@ class Game {
 	// returns true if position is in bounds
 	isInBounds(position) {
 		const [x, y] = position;
-		return x >= 0 && x < this.board[0].length && y >= 0 && y < this.board.length;
+		return x >= 0 && x < this.dimensions[0] && y >= 0 && y < this.dimensions[1];
 	}
 
 	// generates numFood food tiles
