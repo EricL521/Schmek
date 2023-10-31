@@ -3,36 +3,47 @@ import { EventEmitter } from 'events';
 
 import { Tile } from '../../../server-logic/classes/Tile';
 
-// map of actions to argument arrays, where first element is the name of the event
-const actions = new Map([
-	["moveUp", ["direction", [0, -1]]],
-	["moveDown", ["direction", [0, 1]]],
-	["moveLeft", ["direction", [-1, 0]]],
-	["moveRight", ["direction", [1, 0]]],
-	["reverseSnake", ["reverseSnake"]]
-]);
-
-// maps key names to actions
-const defaultControls = new Map([
-	["ArrowUp", new Set(["moveUp"])],
-	["ArrowDown", new Set(["moveDown"])],
-	["ArrowLeft", new Set(["moveLeft"])],
-	["ArrowRight", new Set(["moveRight"])],
-	["w", new Set(["moveUp"])],
-	["s", new Set(["moveDown"])],
-	["a", new Set(["moveLeft"])],
-	["d", new Set(["moveRight"])],
-	[" ", new Set(["reverseSnake"])]
-]);
-
 class Client extends EventEmitter {
-	static get actions () { return actions; }
+	// map of actions to argument arrays, where first element is the name of the event
+	static get actions() {return new Map([
+		["moveUp", ["direction", [0, -1]]],
+		["moveDown", ["direction", [0, 1]]],
+		["moveLeft", ["direction", [-1, 0]]],
+		["moveRight", ["direction", [1, 0]]],
+		["reverseSnake", ["reverseSnake"]]
+	]);}
+	// maps key names to actions
+	static get defaultControls() {return new Map([
+		["ArrowUp", new Set(["moveUp"])],
+		["ArrowDown", new Set(["moveDown"])],
+		["ArrowLeft", new Set(["moveLeft"])],
+		["ArrowRight", new Set(["moveRight"])],
+		["w", new Set(["moveUp"])],
+		["s", new Set(["moveDown"])],
+		["a", new Set(["moveLeft"])],
+		["d", new Set(["moveRight"])],
+		[" ", new Set(["reverseSnake"])]
+	]);}
 
 	constructor(controls) {
 		super();
 
-		this.controls = controls ?? defaultControls;
-		this.controlsArray = this.genControlsArray();
+		if (controls) {
+			this.controls = controls;
+			this.controlsArray = this.genControlsArray();
+		}
+		else {
+			// check local storage for controls
+			const storedControlsArray = localStorage.getItem('controlsArray');
+			if (storedControlsArray) {
+				this.controlsArray = JSON.parse(storedControlsArray);
+				this.controls = this.genControlsMap(); 
+			}
+			else {
+				this.controls = Client.defaultControls;
+				this.controlsArray = this.genControlsArray();
+			}
+		}
 
 		this.socket = io();
 		this.initializeSocket();
@@ -65,6 +76,9 @@ class Client extends EventEmitter {
 	}
 	// adds listeners for this client's events
 	initializeClient() {
+		// save controls to local storage when they change
+		this.on('controlsChange', () => localStorage.setItem('controlsArray', JSON.stringify(this.controlsArray)));
+
 		this.on("direction", ([x, y]) => {
 			// if that direction is already set or snake is dead, don't send it
 			if (!this.alive || (this.direction[0] == x && this.direction[1] == y) ) return;
@@ -138,14 +152,25 @@ class Client extends EventEmitter {
 		}
 		return controlsArray;
 	}
+	genControlsMap() {
+		const controls = new Map();
+		for (const [key, action] of this.controlsArray) {
+			const actions = controls.get(key);
+			if (actions) actions.add(action);
+			else controls.set(key, new Set([action]));
+		}
+		return controls;
+	}
 	setKeybind(index, key, action) {
 		// remove old action from controls
 		const oldKey = this.controlsArray[index][0];
 		const oldAction = this.controlsArray[index][1];
 		if (oldKey == key && oldAction == action) return; // don't do anything if keybind is the same
 		const oldActions = this.controls.get(oldKey);
-		oldActions.delete(oldAction);
-		if (oldKey !== key && oldActions.size == 0) this.controls.delete(oldKey);
+		if (oldActions) {
+			oldActions.delete(oldAction);
+			if (oldKey !== key && oldActions.size == 0) this.controls.delete(oldKey);
+		}
 
 		// update controlsArray and controls
 		const actions = this.controls.get(key);
@@ -154,6 +179,9 @@ class Client extends EventEmitter {
 		if (actions) actions.add(action);
 		else this.controls.set(key, new Set([action]));
 		this.controlsArray[index] = [key, action];
+		
+		// emit event to update local storage
+		this.emit("controlsChange");
 	}
 	addKeybind(key, action) {
 		// update controlsArray and controls
@@ -161,6 +189,9 @@ class Client extends EventEmitter {
 		if (actions) actions.add(action);
 		else this.controls.set(key, new Set([action]));
 		this.controlsArray.unshift([key, action]);
+		
+		// emit event to update local storage
+		this.emit("controlsChange");
 	}
 	removeKeybind(index) {
 		// remove action from controls
@@ -174,6 +205,22 @@ class Client extends EventEmitter {
 
 		// update controlsArray
 		this.controlsArray.splice(index, 1);
+
+		// emit event to update local storage
+		this.emit("controlsChange");
+	}
+	sortKeybinds() {
+		// genControlsArray is already sorted
+		this.controlsArray = this.genControlsArray();
+	}
+	// overrides all keybinds with default keybinds
+	resetKeybinds() {
+		// reset controls and controlsArray
+		this.controls = Client.defaultControls;
+		this.controlsArray = this.genControlsArray();
+
+		// emit event to update local storage
+		this.emit("controlsChange");
 	}
 	// called when user presses a key, and emits necessary events
 	keyPress(key) {

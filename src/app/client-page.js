@@ -66,7 +66,9 @@ export default function ClientPage() {
 					controls={client ? client.controls : new Map()}
 					setKeybind={ (index, key, action) => {client.setKeybind(index, key, action); forceUpdate();} } 
 					removeKeybind={ index => {client.removeKeybind(index); forceUpdate();} }
-					addKeybind={ (key, action) => {client.addKeybind(key, action); forceUpdate();} }/>
+					addKeybind={ (key, action) => {client.addKeybind(key, action); forceUpdate();} }
+					sortKeybinds={ () => {client.sortKeybinds(); forceUpdate();} }
+					resetKeybinds={ () => {client.resetKeybinds(); forceUpdate();} }/>
 
 				{(currentPage == 'home-screen')? 
 					<HomeScreen joinGame={joinGame}/> 

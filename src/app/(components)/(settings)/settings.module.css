@@ -80,11 +80,19 @@
 #keybinds-title button {
 	border-radius: 100vh;
 	border: 1px var(--text-color) solid;
-	background-color: var(--primary-color);
 
 	cursor: pointer;
 	
 	padding: 2.5px 5px;
+}
+#keybinds-title #new-button {
+	background-color: var(--primary-color);
+}
+#keybinds-title #sort-button {
+	background-color: var(--tertiary-color);
+}
+#keybinds-title #reset-button {
+	background-color: var(--secondary-color);
 }
 #keybinds-title button:hover, #keybinds-title button:focus-visible {
 	transform: scale(1.1);

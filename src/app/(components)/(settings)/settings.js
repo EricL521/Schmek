@@ -9,7 +9,7 @@ import styles from './settings.module.css';
 import Image from 'next/image';
 
 // keybinds is an array [ [key, action] ... ]
-export default function Settings({ actions, keybinds, controls, setKeybind, addKeybind, removeKeybind }) {
+export default function Settings({ actions, keybinds, controls, setKeybind, addKeybind, removeKeybind, sortKeybinds, resetKeybinds }) {
 	return (
 		<div id={styles['settings-panel']} className={styles['interactive']}>
 			<Image src="./icons/settings.svg" alt="settings" width={1000} height={1000} 
@@ -20,8 +20,14 @@ export default function Settings({ actions, keybinds, controls, setKeybind, addK
 			<div id={styles['keybinds-panel']} className={styles['interactive']}>
 				<div id={styles['keybinds-title']}>
 					<h3 className={styles['interactive']}>Keybinds</h3>
-					<button className={styles['interactive']} onClick={() => {addKeybind("click to bind", ""); unFocus();}}>
-						New keybind
+					<button id={styles['reset-button']} className={styles['interactive']} onClick={() => {resetKeybinds(); unFocus();}}>
+						Reset
+					</button>
+					<button id={styles['sort-button']} className={styles['interactive']} onClick={() => {sortKeybinds(); unFocus();}}>
+						Sort
+					</button>
+					<button id={styles['new-button']} className={styles['interactive']} onClick={() => {addKeybind("click to bind", ""); unFocus();}}>
+						New
 					</button>
 				</div>
 

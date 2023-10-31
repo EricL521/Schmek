@@ -4,6 +4,7 @@
 	--background-color-2: #FFF2D7;
 	--primary-color: #78C3CE;
 	--secondary-color: #f28a8f;
+	--tertiary-color: #F9DD4D;
 }
 
 .dark {
@@ -12,4 +13,5 @@
 	--background-color-2: #302D21;
 	--primary-color: #266069;
 	--secondary-color: #9B4647;
+	--tertiary-color: #625304;
 }
