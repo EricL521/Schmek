@@ -13,10 +13,8 @@ export default function Board({ boardState, headPos, tileSize }) {
 	const boardStyle = useMemo(() => ({
 		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'vh )',
 		top: 'calc( 50% - ' + (headPos[1] + 0.5) * tileSize + 'vh )',
-		width: boardState[0].length * tileSize + 'vh',
-		height: boardState.length * tileSize + 'vh',
 		boxShadow: '0 0 ' + 5*tileSize + 'vh ' + 5*tileSize + 'vh var(--secondary-color)',
-	}), [headPos, tileSize, boardState]);
+	}), [headPos, tileSize]);
 
 	// create listener for window resize
 	const [windowSize, setWindowSize] = useState([window.innerWidth, window.innerHeight]);
@@ -44,6 +42,8 @@ export default function Board({ boardState, headPos, tileSize }) {
 		const boardCropOffset = {
 			marginLeft: Math.max(0, headPos[0] - tilesX) * tileSize + 'vh',
 			marginTop: Math.max(0, headPos[1] - tilesY) * tileSize + 'vh',
+			marginRight: Math.max(0, boardState[0].length - (headPos[0] + tilesX)) * tileSize + 'vh',
+			marginBottom: Math.max(0, boardState.length - (headPos[1] + tilesY)) * tileSize + 'vh',
 		};
 
 		return [croppedBoardState, boardCropOffset];
