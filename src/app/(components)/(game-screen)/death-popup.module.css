@@ -10,7 +10,7 @@
 #death-popup {
 	width: 60vh;
 	height: 75vh;
-	z-index: 1000;
+	z-index: 500;
 	background-color: var(--background-color-2);
 	opacity: 0.9;
 	border-radius: 5vh;
