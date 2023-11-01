@@ -180,7 +180,6 @@ class Game {
 		if (num === 1) return [Array.from(this.emptyTiles)[ Math.floor(Math.random() * this.emptyTiles.size) ]].map(Tile.stringToPosition);
 		// if num isn't one, shuffle array
 		const randomEmptyTiles = Array.from(this.emptyTiles).sort(() => Math.random() - 0.5).slice(0, num);
-		// NOTE: REPLACE SORT WITH CUSTOM FUNCTION LATER -- MUCH MORE EFFICIENT
 		return randomEmptyTiles.map(Tile.stringToPosition);
 	}
 }
