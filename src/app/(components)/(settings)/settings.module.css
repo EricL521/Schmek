@@ -58,7 +58,7 @@
 	padding-left: min(10px, 5%);
 
 	width: 85%;
-	height: 50%;
+	height: max(50%, 120px);
 
 	border: 1px var(--text-color);
 	border-left-style: solid;

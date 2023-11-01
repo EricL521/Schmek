@@ -8,7 +8,7 @@
 }
 
 #home {
-	width: 160px;
+	width: 225px;
 	height: 200px;
 	min-width: min(60vh, 90vw);
 	min-height: 75vh;
@@ -17,7 +17,7 @@
 
 	background-color: var(--background-color-2);
 	border-radius: 5vh;
-	border: 2px solid var(--text-color);
+	border: 3px solid var(--text-color);
 
 	display: flex;
 	flex-direction: column;
@@ -60,7 +60,7 @@
 #color-label {
 	width: 35px;
 	height: 35px;
-	border-radius: 1.5vh;
+	border-radius: 10px;
 	border: 1px solid var(--text-color);
 
 	cursor: pointer;
