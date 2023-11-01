@@ -14,15 +14,21 @@ class Game {
 		this.deadSnakes = new Set(); // stores dead snakes
 		
 		// generate food
-		this.generateFood(numFood);
+		this.generateFood(numFood, true);
 	}
 	get tilesArray() { return Array.from(this.tiles.values()); }
 	initializeTiles(dimensions) {
 		const tiles = new Map();
 		const emptyTiles = new Set();
-		for (let y = 0; y < dimensions[0]; y++) 
+		console.log("Generating Tiles...");
+		for (let y = 0; y < dimensions[0]; y++) {
+			process.stdout.cursorTo(0); // move cursor to beginning of line
+			process.stdout.write("Row " + (y + 1) + "/" + dimensions[0]);
+
 			for (let x = 0; x < dimensions[1]; x++) 
 				emptyTiles.add(Tile.positionToString([x, y]));
+		}
+		console.log(); // move cursor to next line
 		return [tiles, emptyTiles];
 	}
 
@@ -30,7 +36,7 @@ class Game {
 	// returns snake
 	addSnake(socket, name, color, initialLength = 3) {
 		// randomly generate a head position for the snake
-		const headPos = this.getRandomEmptyPos();
+		const [headPos] = this.getRandomEmptyPos(1);
 		const body = Array(initialLength).fill(new Tile(headPos, "snake", color, null, [50, 50, 50, 50])); // body is 3 tiles long
 		const direction = [0, 0]; // default to no movement
 
@@ -151,21 +157,31 @@ class Game {
 	}
 
 	// generates numFood food tiles
-	generateFood(numFood = 1) {
+	// log is whether to log progress to console
+	generateFood(numFood = 1, log = false) {
 		const tileChanges = [];
-		for (let i = 0; i < numFood; i++) {
-			const food = new Tile(this.getRandomEmptyPos(), "food", "red", 0.8, [25, 25, 25, 25]);
+		if (log) console.log("Generating Food...");
+		this.getRandomEmptyPos(numFood).forEach((pos, i) => {
+			if (log) {
+				process.stdout.cursorTo(0); // move cursor to beginning of line
+				process.stdout.write("Apple " + (i + 1) + "/" + numFood);
+			}
+			const food = new Tile(pos, "food", "red", 0.8, [25, 25, 25, 25]);
 			tileChanges.push(food);
-
-			// apply changes to board to update emptyTiles
-			this.updateBoard([food]);
-		}
+		});
+		if (log) console.log(); // move cursor to next line
+		// update board and other snakes
+		this.updateBoard(tileChanges);
 		this.updatePlayers(tileChanges);
 	}
-	// returns a random empty position
-	getRandomEmptyPos() {
-		const emptyTilesArray = Array.from(this.emptyTiles);
-		return Tile.stringToPosition(emptyTilesArray[Math.floor(Math.random() * emptyTilesArray.length)]);
+	// returns a list of num empty tile positions
+	getRandomEmptyPos(num) {
+		// shuffling array is faster than picking them out one by one, unless num is one
+		if (num === 1) return [Array.from(this.emptyTiles)[ Math.floor(Math.random() * this.emptyTiles.size) ]].map(Tile.stringToPosition);
+		// if num isn't one, shuffle array
+		const randomEmptyTiles = Array.from(this.emptyTiles).sort(() => Math.random() - 0.5).slice(0, num);
+		// NOTE: REPLACE SORT WITH CUSTOM FUNCTION LATER -- MUCH MORE EFFICIENT
+		return randomEmptyTiles.map(Tile.stringToPosition);
 	}
 }
 
