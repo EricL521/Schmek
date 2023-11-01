@@ -179,8 +179,19 @@ class Game {
 		// shuffling array is faster than picking them out one by one, unless num is one
 		if (num === 1) return [Array.from(this.emptyTiles)[ Math.floor(Math.random() * this.emptyTiles.size) ]].map(Tile.stringToPosition);
 		// if num isn't one, shuffle array
-		const randomEmptyTiles = Array.from(this.emptyTiles).sort(() => Math.random() - 0.5).slice(0, num);
+		const randomEmptyTiles = this.randomizeArray( Array.from(this.emptyTiles) ).slice(0, num);
 		return randomEmptyTiles.map(Tile.stringToPosition);
+	}
+	// NOTE: THIS FUNCTION MODIFIES THE ARRAY
+	randomizeArray(array) {
+		for (let currentIndex = array.length - 1; currentIndex > 0; currentIndex--) {
+			// get random index up to and including i
+			const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+			// swap elements
+			[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+		}
+
+		return array;
 	}
 }
 
