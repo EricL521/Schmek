@@ -8,8 +8,13 @@
 }
 
 #home {
-	width: 60vh;
-	height: 75vh;
+	width: 160px;
+	height: 200px;
+	min-width: min(60vh, 90vw);
+	min-height: 75vh;
+	max-width: 90vw;
+	max-height: 90vh;
+
 	background-color: var(--background-color-2);
 	border-radius: 5vh;
 	border: 2px solid var(--text-color);
@@ -53,8 +58,8 @@
 	transform: scale(1.05);
 }
 #color-label {
-	width: 5vh;
-	height: 5vh;
+	width: 35px;
+	height: 35px;
 	border-radius: 1.5vh;
 	border: 1px solid var(--text-color);
 
