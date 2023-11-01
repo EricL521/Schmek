@@ -1,5 +1,5 @@
 {
-	"dimensions": [1000, 1000],
-	"numFood": 50000,
+	"dimensions": [100, 100],
+	"numFood": 500,
 	"tps": 3
 }

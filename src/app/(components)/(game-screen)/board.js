@@ -10,11 +10,13 @@ import BoardRow from "./board-row";
 // headpos is just [x, y]
 export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 	// offset board to make headPos the center
-	const boardStyle = useMemo(() => ({
-		left: 'calc( 50% - ' + (headPos[0] + 0.5) * tileSize + 'vh )',
-		top: 'calc( 50% - ' + (headPos[1] + 0.5) * tileSize + 'vh )',
-		boxShadow: '0 0 ' + 5*tileSize + 'vh ' + 5*tileSize + 'vh var(--secondary-color)',
+	const boardPosStyle = useMemo(() => ({
+		left: -1 * (headPos[0] + 0.5) * tileSize + 'vh',
+		top: -1 * (headPos[1] + 0.5) * tileSize + 'vh',
 	}), [headPos, tileSize]);
+	const boardBorderStyle = useMemo(() => ({
+		boxShadow: '0 0 ' + 5*tileSize + 'vh ' + 5*tileSize + 'vh var(--secondary-color)',
+	}), [tileSize]);
 
 	// create listener for window resize
 	const [windowSize, setWindowSize] = useState([window.innerWidth, window.innerHeight]);
@@ -46,14 +48,14 @@ export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 		const croppedBoardState = boardState.slice(minY, maxY + 1)
 			.map(row => row.slice(minX, maxX + 1));
 		// get offset for board
-		const boardCropOffset = {
-			marginLeft: minX * tileSize + 'vh',
-			marginTop: minY * tileSize + 'vh',
-			marginRight: (boardState[0].length - 1 - maxX) * tileSize + 'vh',
-			marginBottom: (boardState.length - 1 - maxY) * tileSize + 'vh',
+		const boardCropPadding = {
+			paddingLeft: minX * tileSize + 'vh',
+			paddingTop: minY * tileSize + 'vh',
+			paddingRight: (boardState[0].length - 1 - maxX) * tileSize + 'vh',
+			paddingBottom: (boardState.length - 1 - maxY) * tileSize + 'vh',
 		};
 
-		return [croppedBoardState, boardCropOffset];
+		return [croppedBoardState, boardCropPadding];
 	}, [boardState, oldHeadPos, headPos, tileSize, windowSize]);
 	
 	// generate table
@@ -61,10 +63,8 @@ export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 		<BoardRow key={index} row={row} tileSize={tileSize} />
 	), [croppedBoardState, tileSize]);
 	return (
-		<div style={boardStyle} id={style['board']}>
-			<div style={boardCropOffset} id={style['board-offset']}>
-				{rows}
-			</div>
+		<div style={{...boardPosStyle, ...boardCropOffset, ...boardBorderStyle}} id={style['board']}>
+			{rows}
 		</div>
 	);
 };

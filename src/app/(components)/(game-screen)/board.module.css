@@ -1,12 +1,12 @@
 #board {
 	position: absolute;
-	transition: all 0.5s ease;
-}
-#board-crop-offset {
-	position: absolute;
-	
+	transition: 0.5s ease;
+	transition-property: left, top;
+
 	width: min-content;
 	height: min-content;
+	margin-left: 50vw;
+	margin-top: 50vh;
 
 	display: flex;
 	flex-direction: column;
