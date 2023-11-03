@@ -2,7 +2,7 @@
 'use-client'
 
 import { useReducer } from "react";
-import { unFocus } from "../unFocus";
+import { unFocus } from "../../unFocus";
 
 import styles from './keybinds-panel.module.css';
 

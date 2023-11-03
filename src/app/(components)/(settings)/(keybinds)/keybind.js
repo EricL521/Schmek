@@ -2,7 +2,7 @@
 'use-client'
 
 import { useEffect, useState } from 'react';
-import { unFocus } from '../unFocus';
+import { unFocus } from '../../unFocus';
 
 import styles from './keybind.module.css';
 

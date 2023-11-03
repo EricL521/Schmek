@@ -4,7 +4,7 @@
 import styles from './settings.module.css';
 
 import Image from 'next/image';
-import KeybindsPanel from './keybinds-panel';
+import KeybindsPanel from './(keybinds)/keybinds-panel';
 
 // keybinds is an array [ [key, action] ... ]
 export default function Settings({ client }) {
