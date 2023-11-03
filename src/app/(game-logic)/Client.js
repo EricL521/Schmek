@@ -24,6 +24,9 @@ class Client extends EventEmitter {
 		["d", new Set(["moveRight"])],
 		[" ", new Set(["reverseSnake"])]
 	]);}
+	// also make the above non-static
+	get actions() {return Client.actions;}
+	get defaultControls() {return Client.defaultControls;}
 
 	constructor(controls) {
 		super();

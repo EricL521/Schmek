@@ -1,0 +1,73 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: transform;
+	backface-visibility: hidden;
+}
+.interactive:hover, .interactive:focus-visible {
+	transform: scale(1.1);
+}
+
+#keybinds-panel {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding-left: min(10px, 5%);
+
+	width: 85%;
+	height: max(50%, 120px);
+
+	border: 1px var(--text-color);
+	border-left-style: solid;
+}
+#keybinds-panel:hover, #keybinds-panel:focus-within {
+	transform: scale(1.05);
+}
+#keybinds-title {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 5px;
+
+	width: 100%;
+}
+#keybinds-title h3 {
+	margin: 0;
+	padding: 5px;
+}
+#keybinds-title button {
+	border-radius: 100vh;
+	border: 1px var(--text-color) solid;
+
+	cursor: pointer;
+	
+	padding: 2.5px 5px;
+}
+#keybinds-title #new-button {
+	background-color: var(--primary-color);
+}
+#keybinds-title #sort-button {
+	background-color: var(--tertiary-color);
+}
+#keybinds-title #reset-button {
+	background-color: var(--secondary-color);
+}
+#keybinds-title button:hover, #keybinds-title button:focus-visible {
+	transform: scale(1.1);
+}
+#keybinds-title button:active {
+	transform: scale(1.05);
+}
+
+#keybinds {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+
+	width: 100%;
+
+	overflow-y: auto;
+}

@@ -1,7 +1,7 @@
 // this component is rendered client-side ONLY
 'use client';
 
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Client from './(game-logic)/Client';
 
 import './themes.css';
@@ -14,8 +14,6 @@ import GameScreen from './(components)/(game-screen)/game-screen';
 import Settings from './(components)/(settings)/settings';
 
 export default function ClientPage() {
-	const [, forceUpdate] = useReducer(x => x + 1, 0);
-
 	// initialize client
 	const [client, setClient] = useState(null);
 	useEffect(() => {
@@ -62,13 +60,7 @@ export default function ClientPage() {
 		<main id={styles.main} className={actualTheme}>
 			<div id={styles.content}>
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'}/>
-				<Settings actions={Array.from(Client.actions.keys())} keybinds={client ? client.controlsArray : []}
-					controls={client ? client.controls : new Map()}
-					setKeybind={ (index, key, action) => {client.setKeybind(index, key, action); forceUpdate();} } 
-					removeKeybind={ index => {client.removeKeybind(index); forceUpdate();} }
-					addKeybind={ (key, action) => {client.addKeybind(key, action); forceUpdate();} }
-					sortKeybinds={ () => {client.sortKeybinds(); forceUpdate();} }
-					resetKeybinds={ () => {client.resetKeybinds(); forceUpdate();} }/>
+				<Settings client={client} />
 
 				{(currentPage == 'home-screen')? 
 					<HomeScreen joinGame={joinGame}/> 

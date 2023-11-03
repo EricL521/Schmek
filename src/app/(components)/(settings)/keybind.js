@@ -9,7 +9,7 @@ import styles from './keybind.module.css';
 // keybind is in form [key, action]
 // setKeybind takes in key, action
 // options is an array of options for the action
-export default function Keybind({ actions, keybind, controls, setKeybind, removeKeybind }) {
+export default function Keybind({ keybind, allActions, usedActions, setKeybind, removeKeybind }) {
 	const [keyListening, setKeyListening] = useState(false);
 
 	// add listener for when user presses a key, if keyListening is true
@@ -52,8 +52,8 @@ export default function Keybind({ actions, keybind, controls, setKeybind, remove
 				<select className={styles['interactive']} value={keybind[1]} 
 				onChange={(e) => {setKeybind(keybind[0], e.target.value); }} >
 					<option value="">None</option>
-					{actions.filter(
-						action => action == keybind[1] || !controls.get(keybind[0])?.has(action)
+					{allActions.filter(
+						action => action == keybind[1] || !usedActions?.has(action)
 					).map(option => 
 						<option key={option} value={option}>{option}</option>
 					)}
