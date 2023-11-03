@@ -45,7 +45,6 @@ export default function ClientPage() {
 	const actualTheme = useMemo(() => getActualTheme(currentTheme, systemTheme), [currentTheme, systemTheme]);
 
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
-
 	// called when user clicks play on home screen
 	const joinGame = (name, color) => {
 		setCurrentPage('loading-screen');
@@ -55,6 +54,11 @@ export default function ClientPage() {
 		// join game
 		client.joinGame(name, color);
 	};
+	const pages = {
+		'home-screen': <HomeScreen joinGame={joinGame}/>,
+		'loading-screen': <LoadingScreen />,
+		'game-screen': <GameScreen client={client} tileSize={5}/>
+	};
 	
 	return (
 		<main id={styles.main} className={actualTheme}>
@@ -62,13 +66,7 @@ export default function ClientPage() {
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'}/>
 				<Settings client={client} />
 
-				{(currentPage == 'home-screen')? 
-					<HomeScreen joinGame={joinGame}/> 
-				:  (currentPage == 'loading-screen')?
-					<LoadingScreen />
-				: (currentPage == 'game-screen')?
-					<GameScreen client={client} tileSize={5}/>
-				: null}
+				{pages[currentPage]}
 				
 			</div>
 		</main>
