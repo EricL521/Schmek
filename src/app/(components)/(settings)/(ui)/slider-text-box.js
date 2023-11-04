@@ -8,6 +8,7 @@ import styles from './slider-text-box.module.css';
 export default function SliderTextBox({ label, value, onValue, min, max, step }) {
 	const div = useRef(null);
 	const input = useRef(null);
+	const [localValue, setLocalValue] = useState(value);
 	const [dragging, setDragging] = useState(false);
 	const [inputSelected, setInputSelected] = useState(false);
 
@@ -17,19 +18,24 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 
 	// update input value when value changes
 	const onRawValue = useCallback((value) => {
+		setLocalValue(value);
 		let newValue = Math.max(min, Math.min(max, parseFloat(value)));
-		if (isNaN(newValue)) newValue = min;
+		if (isNaN(newValue)) return;
 		onValue(newValue);
 	}, [min, max, onValue]);
 
 	// deal with scrolling and selecting input
-	const selectInput = useCallback((e) => {
+	const selectInput = useCallback(() => {
 		// if input is already focused, do nothing
 		if (inputSelected) return;
 
 		input.current.focus();
 		input.current.select();
 	}, [inputSelected]);
+	const onInputBlur = useCallback(() => {
+		setInputSelected(false);
+		setLocalValue(value);
+	}, [value]);
 	const startDrag = useCallback((e) => {
 		// if input is already focused, do nothing
 		if (inputSelected) return;
@@ -59,6 +65,8 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 		let newValue = value + dValue;
 		// round to nearest step
 		if (step) newValue = Math.round(newValue / step) * step;
+		// clamp to min and max
+		newValue = Math.max(min, Math.min(max, newValue));
 
 		// set value
 		onRawValue(newValue);
@@ -68,8 +76,9 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 		<div style={mouseCSS} className={[styles['slider-text-box'], styles['interactive']].join(' ')} ref={div} tabIndex={-1}
 			onMouseUp={stopDrag} onMouseDown={startDrag} onMouseMove={onDrag} >
 			<input id={styles['slider-text-input']} className={styles['interactive']} ref={input} 
-				value={value} onChange={e => onRawValue(e.target.value)} onClick={selectInput}
-				onFocus={() => setInputSelected(true)} onBlur={() => setInputSelected(false)}/>
+				value={localValue} onChange={e => onRawValue(e.target.value)} onClick={selectInput}
+				onFocus={() => setInputSelected(true)} onBlur={onInputBlur}
+				onKeyDown={ e => {if (e.key === "Enter") { input.current.blur(); onInputBlur(); }} }/>
 			<label htmlFor={styles && styles['slider-text-input']}>
 				{label}
 			</label>
