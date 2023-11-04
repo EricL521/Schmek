@@ -43,7 +43,7 @@ export default function Keybind({ keybind, allActions, usedActions, setKeybind, 
 		<tr className={[styles['keybind']].join(' ')}>
 			<td>
 				<button className={[keyListening && styles['listening'], styles['key-button'], styles['interactive']].join(' ')}
-				onClick={() => {setKeyListening(!keyListening); unFocus();}} >
+				onClick={() => {if (keyListening) unFocus(); setKeyListening(!keyListening);}} >
 					{ keyListening? "press a key" :
 					keybind[0] == " " ? "Space" : keybind[0] }
 				</button>
