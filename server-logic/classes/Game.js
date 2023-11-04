@@ -124,7 +124,7 @@ class Game {
 		// send tileChanges to all snakes
 		this.updatePlayers(tileChanges);
 	}
-	// updates board and emptyTiles based on tileChanges
+	// updates tiles and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
 			// update tiles and emptyTiles
