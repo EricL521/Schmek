@@ -7,16 +7,16 @@
 	transform: scale(1.1);
 }
 
-.keybind {
-	width: 90%;
-	padding: 5px;
-}
 .keybind td {
 	text-align: center;
+}
+.keybind td.small {
+	width: 0px;
 }
 .keybind .key-button {
 	min-width: 50px;
 	margin: 0;
+	margin-left: 5px;
 
 	border-radius: 100vh;
 	border: 1px var(--text-color) solid;
