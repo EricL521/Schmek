@@ -1,7 +1,7 @@
 // panel for customizing keybinds
 'use-client'
 
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import { unFocus } from "../../unFocus";
 
 import styles from './keybinds-panel.module.css';
@@ -10,6 +10,8 @@ import Keybind from "./keybind";
 
 export default function KeybindsPanel({ client, visible }) {
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+	const keybindsTable = useRef(null);
 
 	return (
 		<div id={styles['keybinds-panel']} className={[styles['interactive'], visible || styles['hidden']].join(' ')}>
@@ -24,12 +26,12 @@ export default function KeybindsPanel({ client, visible }) {
 					Sort
 				</button>
 				<button id={styles['new-button']} className={styles['interactive']} 
-				onClick={() => {client.addKeybind("click to bind", ""); forceUpdate(); unFocus();}}>
+				onClick={() => {client.addKeybind("click to bind", ""); keybindsTable.current.scrollTop = 0; forceUpdate(); unFocus();}}>
 					New
 				</button>
 			</div>
 
-			<table id={styles['keybinds']} tabIndex={-1}>
+			<table id={styles['keybinds']} tabIndex={-1} ref={keybindsTable}>
 				<tbody>
 					{client?.controlsArray.map((keybind, index) =>
 						<Keybind key={index} allActions={Array.from(client?.actions.keys()) ?? new Set()} 
