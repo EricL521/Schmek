@@ -6,6 +6,7 @@ import { Tile } from '../../../server-logic/classes/Tile';
 class Client extends EventEmitter {
 	// map of actions to argument arrays, where first element is the name of the event
 	static get actions() {return new Map([
+		["joinGame", ["joinGame"]],
 		["moveUp", ["direction", [0, -1]]],
 		["moveDown", ["direction", [0, 1]]],
 		["moveLeft", ["direction", [-1, 0]]],
@@ -14,6 +15,7 @@ class Client extends EventEmitter {
 	]);}
 	// maps key names to actions
 	static get defaultControls() {return new Map([
+		["Enter", new Set(["joinGame"])],
 		["ArrowUp", new Set(["moveUp"])],
 		["ArrowDown", new Set(["moveDown"])],
 		["ArrowLeft", new Set(["moveLeft"])],
@@ -109,26 +111,21 @@ class Client extends EventEmitter {
 		});
 	}
 
+	setName(name) { this.name = name; }
+	setColor(color) { this.color = color; }
 	// if called before connect, will be called when connected
-	joinGame(name, color) {
-		this.name = name;
-		this.color = color;
-
+	joinGame() {
 		// either call function, or add listener for connect
-		if (this.connected) this.joinGameFunction(name, color);
+		if (this.connected) this.joinGameFunction();
 		else {
 			this.emit("loadingStatus", "Connecting");
-			this.once("connect", () => this.joinGameFunction(name, color));
+			this.once("connect", () => this.joinGameFunction());
 		}
 	}
-	// sends message to server to respawn
-	respawn() {
-		this.joinGameFunction(this.name, this.color);
-	}
-	joinGameFunction(name, color) {
+	joinGameFunction() {
 		this.emit("loadingStatus", "Joining");
 		// send name to server
-		this.socket.emit("join", name, color, (dimensions, tiles, headPos) => {
+		this.socket.emit("join", this.name, this.color, (dimensions, tiles, headPos) => {
 			this.emit("loadingStatus", "Loading");
 
 			// snake is now alive, also reset direction
@@ -144,6 +141,7 @@ class Client extends EventEmitter {
 			this.emit("boardInitialized");
 		});
 	} 
+	// generates board based on dimensions and tiles when joining game
 	genBoard(dimensions, tiles) {
 		const boardState = [];
 		for (let y = 0; y < dimensions[1]; y++) {

@@ -7,6 +7,8 @@ import Client from './(game-logic)/Client';
 import './themes.css';
 import styles from './client-page.module.css';
 
+import UserInput from './(game-logic)/user-input';
+
 import HomeScreen from './(components)/(home-screen)/home-screen';
 import ThemeManager from './(components)/theme-manager';
 import LoadingScreen from './(components)/(loading-screen)/loading-screen';
@@ -44,26 +46,16 @@ export default function ClientPage() {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const actualTheme = useMemo(() => getActualTheme(currentTheme, systemTheme), [currentTheme, systemTheme]);
 
-	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
-	const [loadingStatus, setLoadingStatus] = useState('Connecting');
-	// called when user clicks play on home screen
-	const joinGame = (name, color) => {
-		setCurrentPage('loading-screen');
-		
-		// add listener for when board is initialized
-		client.once("boardInitialized", () => setCurrentPage('game-screen'));
-		// add listener for connection updates
-		client.on("loadingStatus", (status) => setLoadingStatus(status));
-		// join game
-		client.joinGame(name, color);
-	};
+	const [currentPage, setPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
+	// store tileSize as a state variable
 	const [tileSize, setTileSize] = useState(parseFloat(localStorage.getItem('tileSize')) || 50);
 	// updateTileSize also stores tileSize in localStorage
 	const updateTileSize = (tileSize) => { setTileSize(tileSize); localStorage.setItem('tileSize', tileSize); };
+
 	const pages = {
-		'home-screen': <HomeScreen joinGame={joinGame}/>,
-		'loading-screen': <LoadingScreen status={loadingStatus}/>,
-		'game-screen': <GameScreen client={client} tileSize={tileSize}/>
+		'home-screen': <HomeScreen client={client} setPage={setPage} />,
+		'loading-screen': <LoadingScreen client={client} setPage={setPage} />,
+		'game-screen': <GameScreen client={client} tileSize={tileSize} />
 	};
 	
 	return (
@@ -74,6 +66,7 @@ export default function ClientPage() {
 
 				{pages[currentPage]}
 				
+				<UserInput client={client}/>
 			</div>
 		</main>
 	);
