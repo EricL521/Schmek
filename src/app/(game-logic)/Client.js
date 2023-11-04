@@ -28,6 +28,8 @@ class Client extends EventEmitter {
 	get actions() {return Client.actions;}
 	get defaultControls() {return Client.defaultControls;}
 
+
+	// BEGINNING OF INSTANCE CODE
 	constructor(controls) {
 		super();
 
@@ -114,7 +116,7 @@ class Client extends EventEmitter {
 
 		// either call function, or add listener for connect
 		if (this.connected) this.joinGameFunction(name, color);
-		else this.once("connect", this.joinGameFunction.bind(this)(name, color));
+		else this.once("connect", () => this.joinGameFunction(name, color));
 	}
 	// sends message to server to respawn
 	respawn() {
