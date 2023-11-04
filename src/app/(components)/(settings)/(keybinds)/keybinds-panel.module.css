@@ -1,6 +1,6 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform;
+	transition-property: transform, right, visibility;
 	backface-visibility: hidden;
 }
 .interactive:hover, .interactive:focus-visible {
@@ -8,14 +8,17 @@
 }
 
 #keybinds-panel {
+	position: absolute;
+	right: 0;
+
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-start;
 	align-items: center;
-	padding-left: min(10px, 5%);
 
 	width: 85%;
-	height: max(50%, 120px);
+	margin-right: 10%;
+	height: 100%;
 
 	border: 1px var(--text-color);
 	border-left-style: solid;
@@ -23,10 +26,18 @@
 #keybinds-panel:hover, #keybinds-panel:focus-within {
 	transform: scale(1.05);
 }
+#keybinds-panel.hidden {
+	transition-property: transform, right;
+	right: 100%;
+	visibility: hidden;
+}
 #keybinds-title {
 	display: flex;
+	padding: 0 5px;
+	
+	align-self: flex-start;
 	flex-direction: row;
-	justify-content: space-evenly;
+	justify-content: space-between;
 	align-items: center;
 	flex-wrap: wrap;
 	margin-bottom: 5px;

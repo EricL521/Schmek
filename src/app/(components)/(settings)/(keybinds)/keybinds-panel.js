@@ -8,11 +8,11 @@ import styles from './keybinds-panel.module.css';
 
 import Keybind from "./keybind";
 
-export default function KeybindsPanel({ client }) {
+export default function KeybindsPanel({ client, visible }) {
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 
 	return (
-		<div id={styles['keybinds-panel']} className={styles['interactive']}>
+		<div id={styles['keybinds-panel']} className={[styles['interactive'], visible || styles['hidden']].join(' ')}>
 			<div id={styles['keybinds-title']}>
 				<h3 className={styles['interactive']}>Keybinds</h3>
 				<button id={styles['reset-button']} className={styles['interactive']} 
@@ -29,7 +29,7 @@ export default function KeybindsPanel({ client }) {
 				</button>
 			</div>
 
-			<table id={styles['keybinds']}>
+			<table id={styles['keybinds']} tabIndex={-1}>
 				<tbody>
 					{client?.controlsArray.map((keybind, index) =>
 						<Keybind key={index} allActions={Array.from(client?.actions.keys()) ?? new Set()} 

@@ -1,0 +1,67 @@
+.interactive {
+	transition: 0.25s ease;
+	transition-property: transform, right;
+	backface-visibility: hidden;
+}
+.interactive:hover, .interactive:focus-visible {
+	transform: scale(1.1);
+}
+
+.slider-text-box {
+	width: max(50%, 50px);
+	position: relative;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+
+	background-color: var(--background-color);
+	border: 1px var(--text-color) solid;
+	border-radius: 100vh;
+}
+.slider-text-box:focus-within {
+	transform: scale(1.1);
+}
+#slider-text-input {
+	width: 100%;
+	padding: 2.5px 5%;
+
+	background-color: transparent;
+	border: none;
+
+	cursor: inherit;
+	
+	z-index: 1000001;
+}
+#slider-text-input:hover, .interactive:focus-visible {
+	transform: none;
+	outline: none;
+}
+.slider-text-box label {
+	position: absolute;
+	right: 0;
+	z-index: 1000001;
+
+	margin: 0;
+	padding: 0 3px;
+
+	font-size: 13.3333px;
+
+	pointer-events: none;
+}
+
+#screen-overlay {
+	position: fixed;
+	left: -500vw;
+	top: -500vh;
+	width: 1000vw;
+	height: 1000vh;
+
+	z-index: 1000000;
+
+	cursor: ew-resize;
+}
+#screen-overlay.hidden {
+	display: none;
+}

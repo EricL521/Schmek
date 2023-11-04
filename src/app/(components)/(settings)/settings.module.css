@@ -1,6 +1,6 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: opacity, transform, bottom, left;
+	transition-property: opacity, transform, background-color, bottom, left;
 	backface-visibility: hidden;
 }
 .interactive:hover, .interactive:focus-visible {
@@ -26,7 +26,7 @@
 	position: fixed;
 	left: calc(37.8px - min(300px, 80vw));
 	bottom: calc(37.8px - min(350px, 100vh));
-	z-index: 1000;
+	z-index: 10000;
 
 	width: 300px;
 	height: 350px;
@@ -48,4 +48,42 @@
 
 	opacity: 1;
 	transform: none !important;
+}
+#settings-panel h2 {
+	margin: 0;
+}
+
+#category-selecter {
+	width: 60%;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+}
+#category-selecter button {
+	min-width: 50px;
+	height: 20px;
+	margin: 0;
+
+	border-radius: 100vh;
+	border: 1px var(--text-color) solid;
+
+	cursor: pointer;
+
+	background-color: var(--primary-color);
+}
+#category-selecter button:active {
+	transform: scale(1.05);
+}
+#category-selecter button.selected {
+	background-color: var(--secondary-color);
+}
+
+#categories {
+	position: relative;
+	width: 100%;
+	height: max(50%, 120px);
+
+	margin-bottom: 5px;
 }

@@ -4,8 +4,8 @@ import style from "./board.module.css";
 
 export default function BoardRow({ row, tileSize }) {
 	const getTileStyle = (tile) => ({
-		width: tileSize + 'vh',
-		height: tileSize + 'vh',
+		width: tileSize + 'px',
+		height: tileSize + 'px',
 		backgroundColor: tile.color,
 		scale: tile.size !== 1 ? tile.size : null,
 		borderRadius: tile.borderRadius.map(x => x + '%').join(' ')
