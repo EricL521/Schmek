@@ -54,7 +54,9 @@ export default function ClientPage() {
 		// join game
 		client.joinGame(name, color);
 	};
-	const [tileSize, setTileSize] = useState(50);
+	const [tileSize, setTileSize] = useState(parseFloat(localStorage.getItem('tileSize')) || 50);
+	// updateTileSize also stores tileSize in localStorage
+	const updateTileSize = (tileSize) => { setTileSize(tileSize); localStorage.setItem('tileSize', tileSize); };
 	const pages = {
 		'home-screen': <HomeScreen joinGame={joinGame}/>,
 		'loading-screen': <LoadingScreen />,
@@ -65,7 +67,7 @@ export default function ClientPage() {
 		<main id={styles.main} className={actualTheme}>
 			<div id={styles.content}>
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'} />
-				<Settings client={client} tileSize={tileSize} setTileSize={setTileSize} />
+				<Settings client={client} tileSize={tileSize} setTileSize={updateTileSize} />
 
 				{pages[currentPage]}
 				
