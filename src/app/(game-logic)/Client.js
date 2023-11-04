@@ -116,15 +116,21 @@ class Client extends EventEmitter {
 
 		// either call function, or add listener for connect
 		if (this.connected) this.joinGameFunction(name, color);
-		else this.once("connect", () => this.joinGameFunction(name, color));
+		else {
+			this.emit("loadingStatus", "Connecting");
+			this.once("connect", () => this.joinGameFunction(name, color));
+		}
 	}
 	// sends message to server to respawn
 	respawn() {
 		this.joinGameFunction(this.name, this.color);
 	}
 	joinGameFunction(name, color) {
+		this.emit("loadingStatus", "Joining");
 		// send name to server
 		this.socket.emit("join", name, color, (dimensions, tiles, headPos) => {
+			this.emit("loadingStatus", "Loading");
+
 			// snake is now alive, also reset direction
 			this.alive = true;
 			this.direction = [0, 0];

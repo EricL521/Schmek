@@ -45,12 +45,15 @@ export default function ClientPage() {
 	const actualTheme = useMemo(() => getActualTheme(currentTheme, systemTheme), [currentTheme, systemTheme]);
 
 	const [currentPage, setCurrentPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
+	const [loadingStatus, setLoadingStatus] = useState('Connecting');
 	// called when user clicks play on home screen
 	const joinGame = (name, color) => {
 		setCurrentPage('loading-screen');
 		
 		// add listener for when board is initialized
 		client.once("boardInitialized", () => setCurrentPage('game-screen'));
+		// add listener for connection updates
+		client.on("loadingStatus", (status) => setLoadingStatus(status));
 		// join game
 		client.joinGame(name, color);
 	};
@@ -59,7 +62,7 @@ export default function ClientPage() {
 	const updateTileSize = (tileSize) => { setTileSize(tileSize); localStorage.setItem('tileSize', tileSize); };
 	const pages = {
 		'home-screen': <HomeScreen joinGame={joinGame}/>,
-		'loading-screen': <LoadingScreen />,
+		'loading-screen': <LoadingScreen status={loadingStatus}/>,
 		'game-screen': <GameScreen client={client} tileSize={tileSize}/>
 	};
 	
