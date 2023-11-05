@@ -35,6 +35,9 @@ class Game {
 	// adds a snake to the game
 	// returns snake
 	addSnake(socket, name, color, initialLength = 3) {
+		// kill snake if it already exists
+		this.killSnake(socket);
+
 		// randomly generate a head position for the snake
 		const [headPos] = this.getRandomEmptyPos(1);
 		const body = Array(initialLength).fill(new Tile(headPos, "snake", color, null, [50, 50, 50, 50])); // body is 3 tiles long
