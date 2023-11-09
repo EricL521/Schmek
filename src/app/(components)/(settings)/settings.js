@@ -11,7 +11,7 @@ import KeybindsPanel from './(keybinds)/keybinds-panel';
 import UIPanel from './(ui)/ui-panel';
 
 // keybinds is an array [ [key, action] ... ]
-export default function Settings({ client, tileSize, setTileSize }) {
+export default function Settings({ client, tileSize, setTileSize, theme, setTheme }) {
 	const [category, setCategory] = useState('keybinds');
 
 	// cancel key presses when focused on settings, so they don't get sent to the game
@@ -37,7 +37,7 @@ export default function Settings({ client, tileSize, setTileSize }) {
 
 			<div id={styles['categories']}>
 				<KeybindsPanel visible={category == 'keybinds'} client={client} />
-				<UIPanel visible={category == 'ui'} tileSize={tileSize} setTileSize={setTileSize} />
+				<UIPanel visible={category == 'ui'} tileSize={tileSize} setTileSize={setTileSize} theme={theme} setTheme={setTheme} />
 			</div>
 			
 		</div>

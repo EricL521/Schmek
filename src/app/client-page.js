@@ -62,7 +62,7 @@ export default function ClientPage() {
 		<main id={styles.main} className={actualTheme}>
 			<div id={styles.content}>
 				<ThemeManager theme={currentTheme} setTheme={updateTheme} autoHide={currentPage !== 'home-screen'} />
-				<Settings client={client} tileSize={tileSize} setTileSize={updateTileSize} />
+				<Settings client={client} tileSize={tileSize} setTileSize={updateTileSize} theme={currentTheme} setTheme={updateTheme} />
 
 				{pages[currentPage]}
 				

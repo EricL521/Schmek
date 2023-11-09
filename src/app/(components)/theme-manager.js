@@ -1,13 +1,17 @@
 // sets theme to light or dark mode
 'use client';
 
+import { useMemo } from 'react';
 import { unFocus } from './unFocus';
 
-import style from './theme-manager.module.css';
+import defaultStyle from './theme-manager.module.css';
 
 import Image from 'next/image';
 
-export default function ThemeManager({theme, setTheme, autoHide = true}) {
+export default function ThemeManager({ customStyle, theme, setTheme, autoHide = true }) {
+	const style = useMemo(() => {
+		return customStyle?? defaultStyle;
+	}, [customStyle]);
 
 	return (
 		<div id={style["theme-manager"]} className={autoHide? null: style["visible"]}>
