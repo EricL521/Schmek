@@ -53,6 +53,7 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 		setDragging(false);
 	}, []);
 	const onDrag = useCallback((e) => {
+		if (!dragging) return; // if not dragging, do nothing
 		// if left mouse is not down or input is selected, remove listener
 		if (e.buttons !== 1 || inputSelected)
 			return stopDrag();
@@ -70,7 +71,7 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 
 		// set value
 		onRawValue(newValue);
-	}, [min, max, step, value, inputSelected, onRawValue, stopDrag]); 
+	}, [min, max, step, value, inputSelected, onRawValue, dragging, stopDrag]); 
 
 	return (
 		<div style={mouseCSS} className={[styles['slider-text-box'], styles['interactive']].join(' ')} ref={div} tabIndex={-1}
