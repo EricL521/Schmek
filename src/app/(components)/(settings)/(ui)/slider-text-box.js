@@ -1,11 +1,18 @@
 // a text box, that also functions as a slider
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import styles from './slider-text-box.module.css';
 
-export default function SliderTextBox({ label, value, onValue, min, max, step }) {
+// https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
+const isNumeric = (str) => {
+	if (typeof str != "string") return false // we only process strings!  
+	return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+		   !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+  }
+
+export default function SliderTextBox({ label, value, onValue: setValue, min, max, step }) {
 	const div = useRef(null);
 	const input = useRef(null);
 	const [localValue, setLocalValue] = useState(value);
@@ -19,10 +26,10 @@ export default function SliderTextBox({ label, value, onValue, min, max, step })
 	// update input value when value changes
 	const onRawValue = useCallback((value) => {
 		setLocalValue(value);
-		let newValue = Math.max(min, Math.min(max, parseFloat(value)));
-		if (isNaN(newValue)) return;
-		onValue(newValue);
-	}, [min, max, onValue]);
+		if (!isNumeric(value)) return; // if not a number, do nothing
+		const newValue = Math.max(min, Math.min(max, parseFloat(value)));
+		setValue(newValue);
+	}, [min, max, setValue]);
 
 	// deal with scrolling and selecting input
 	const selectInput = useCallback(() => {
