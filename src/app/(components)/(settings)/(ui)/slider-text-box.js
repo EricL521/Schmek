@@ -26,7 +26,7 @@ export default function SliderTextBox({ label, value, onValue: setValue, min, ma
 	// update input value when value changes
 	const onRawValue = useCallback((value) => {
 		setLocalValue(value);
-		if (!isNumeric(value)) return; // if not a number, do nothing
+		if (!(isNumeric(value) || typeof value === "number")) return; // if not a number, do nothing
 		const newValue = Math.max(min, Math.min(max, parseFloat(value)));
 		setValue(newValue);
 	}, [min, max, setValue]);
