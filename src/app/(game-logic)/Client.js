@@ -11,7 +11,7 @@ class Client extends EventEmitter {
 		["moveDown", ["direction", [0, 1]]],
 		["moveLeft", ["direction", [-1, 0]]],
 		["moveRight", ["direction", [1, 0]]],
-		["reverseSnake", ["reverseSnake"]]
+		["activateAbility", ["activateAbility"]]
 	]);}
 	// maps key names to actions
 	static get defaultControls() {return new Map([
@@ -24,7 +24,7 @@ class Client extends EventEmitter {
 		["s", new Set(["moveDown"])],
 		["a", new Set(["moveLeft"])],
 		["d", new Set(["moveRight"])],
-		[" ", new Set(["reverseSnake"])]
+		[" ", new Set(["activateAbility"])],
 	]);}
 	// also make the above non-static
 	get actions() {return Client.actions;}
@@ -56,8 +56,6 @@ class Client extends EventEmitter {
 		this.initializeSocket();
 
 		this.boardState;
-		this.olderHeadPos;
-		this.oldHeadPos;
 		this.headPos;
 
 		this.alive = false; // don't update direction if dead
@@ -73,8 +71,6 @@ class Client extends EventEmitter {
 			// update board state & head position
 			this.updateBoard(tileChanges);
 			if (headPos) {
-				this.olderHeadPos = this.oldHeadPos;
-				this.oldHeadPos = this.headPos;
 				this.headPos = headPos;
 			}
 
@@ -101,10 +97,10 @@ class Client extends EventEmitter {
 			});
 		});
 
-		this.on("reverseSnake", () => {
-			this.socket.emit("reverseSnake", (headPos, direction) => {
-				this.headPos = headPos;
-				this.direction = direction;
+		this.on("activateAbility", () => {
+			this.socket.emit("activateAbility", (headPos, direction) => {
+				this.headPos = headPos ?? this.headPos;
+				this.direction = direction ?? this.direction;
 	
 				this.emit("gameUpdate", null, this.headPos);
 			});

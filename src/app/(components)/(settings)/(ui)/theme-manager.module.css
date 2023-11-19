@@ -45,5 +45,5 @@
 }
 #theme-manager button.selected {
 	border: 2px solid var(--text-color) !important;
-	background-color: var(--background-color-2);
+	background-color: var(--primary-color);
 }

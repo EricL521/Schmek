@@ -57,7 +57,7 @@ export default function GameScreen({ client, tileSize }) {
 
 	return (
 		<div id={styles['game-screen']}>
-			<Board boardState={boardState} oldHeadPos={oldHeadPos} headPos={headPos} tileSize={tileSize}/>
+			<Board boardState={boardState} headPos={headPos} tileSize={tileSize}/>
 
 			<DeathPopup show={dead} stats={deathData} respawn={respawn}/> 
 		</div>

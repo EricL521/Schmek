@@ -10,6 +10,7 @@ class Game {
 		// emptyTiles is a set of positions
 		[this.tiles, this.emptyTiles] = this.initializeTiles(this.dimensions);
 		this.snakes = new Map(); // maps socket to snake
+		this.nonPlayerSnakes = new Set(); // stores snakes that aren't controlled by a player
 		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
 		this.deadSnakes = new Set(); // stores dead snakes
 		
@@ -36,7 +37,7 @@ class Game {
 	// returns snake
 	addSnake(socket, name, color, initialLength = 3) {
 		// kill snake if it already exists
-		this.killSnake(socket);
+		this.killSnake(this.getSnake(socket));
 
 		// randomly generate a head position for the snake
 		const [headPos] = this.getRandomEmptyPos(1);
@@ -56,17 +57,69 @@ class Game {
 
 		return snake;
 	}
-	killSnake(socket) {
-		const snake = this.snakes.get(socket);
+	reviveSnake(snake) {
+		// if snake is alive, do nothing
+		if (snake.alive) return;
+
+		// remove from deadSnakes
+		this.deadSnakes.delete(snake);
+		// add to snakes or nonPlayerSnakes
+		if (snake.socket) this.snakes.set(snake.socket, snake);
+		else this.nonPlayerSnakes.add(snake);
+
+		snake.alive = true;
+	}
+	// adds a dead snake to the game
+	addDeadSnake(socket, name, color, body, update = true) {
+		// kill snake if it already exists
+		this.killSnake(this.getSnake(socket));
+
+		// create snake
+		const snake = new Snake(socket, name, color, body, [0, 0]);
+		this.killSnake(snake); // kill snake
+
+		// add socket to sockets
+		if (socket) this.sockets.add(socket);
+
+		// update board and other snakes
+		if (update) {
+			this.updateBoard(body);
+			this.updatePlayers(body);
+		}
+
+		return snake;
+	}
+	killSnake(snake) {
 		if (!snake) return; // if snake doesn't exist, return
 
-		// kill snake
-		snake.kill();
 		// remove snake from snakes and add to deadSnakes
-		this.snakes.delete(socket);
+		this.snakes.delete(snake.socket);
 		this.deadSnakes.add(snake);
+
+		// kill snake, and update board ONLY
+		// other snakes aren't updated, because the only that changes is the dead property
+		this.updateBoard(snake.kill());
 	}
 	getSnake(socket) { return this.snakes.get(socket); }
+	// activates the snake's ability
+	activateAbility(socket) {
+		// get snake
+		const snake = this.getSnake(socket);
+		if (!snake) return;
+
+		// activate ability
+		const output = snake.activateAbility(this);
+		if (!output) return; // if snake doesn't have an ability, return
+
+		const [tileChanges, clientInfo] = [output[0], output[1]];
+		// update board and other snakes
+		if (tileChanges && tileChanges.length > 0) {
+			this.updateBoard(tileChanges);
+			this.updatePlayers(tileChanges);
+		}
+
+		return clientInfo;
+	}
 
 	// updates tps times per second
 	startUpdateLoop(tps) {
@@ -83,49 +136,63 @@ class Game {
 	update() {
 		const tileChanges = [];
 		// update all snakes
-		for (const snake of this.snakes.values()) {
-			if (!snake.alive || snake.speed === 0) continue; // skip dead snakes, and non-moving snakes
-
-			// update old head (NOTE: this ALWAYS updates tileChanges)
-			tileChanges.push(...snake.updateCurrentHeadBorderRadius());
-
-			let [snakeTileChanges, newHeadPos] = snake.updateHead();
-
-			// if snake is in bounds, check if it has hit anything
-			if (this.isInBounds(newHeadPos)) {
-				const newHeadTile = this.tiles.get(Tile.positionToString(newHeadPos));
-				// if snake hit empty tile
-				if (!newHeadTile) snakeTileChanges.push(...snake.updateTail());
-				// if snake hits its own tail, it doesn't die
-				else if (newHeadTile.positionString === snake.tail.positionString) snakeTileChanges.push(...snake.updateTail(false));
-				// snake hit food
-				else if (newHeadTile.type === "food") this.generateFood();
-				// if it's not any of those, the snake dies
-				else {
-					// undo head update and snakeTileChanges
-					snake.removeHead();
-					snakeTileChanges = [];
-					// kill snake
-					this.killSnake(snake.socket);
-				}
-			}
-			// if it's not in bounds, the snake dies
-			else {
-				// undo head update and snakeTileChanges
-				snake.removeHead();
-				snakeTileChanges = [];
-				// kill snake
-				this.killSnake(snake.socket);
-			}
-
-			// add snakeTileChanges to tileChanges
-			tileChanges.push(...snakeTileChanges);
-		}
+		for (const snake of this.snakes.values()) tileChanges.push(...this.updateSnake(snake));
+		for (const snake of this.nonPlayerSnakes) tileChanges.push(...this.updateSnake(snake));
 
 		// merge tileChanges into board
 		this.updateBoard(tileChanges);
 		// send tileChanges to all snakes
 		this.updatePlayers(tileChanges);
+	}
+	updateSnake(snake) {
+		if (!snake.alive || snake.speed === 0) return []; // skip dead snakes, and non-moving snakes
+
+		// keep track of changed Tiles
+		const tileChanges = [];
+		
+		// update old head (NOTE: this ALWAYS updates tileChanges)
+		tileChanges.push(...snake.updateHeadBorderRadius());
+
+		let [snakeTileChanges, newHeadPos] = snake.updateHead();
+
+		// if snake is in bounds, check if it has hit anything
+		if (this.isInBounds(newHeadPos)) {
+			const newHeadTile = this.tiles.get(Tile.positionToString(newHeadPos));
+
+			const updateFunctions = Snake.defaultUpdateFunctions.concat(snake.customUpdateFunctions);
+			const killSnake = updateFunctions.every(updateFunction => {
+				const result = updateFunction(this, snake, newHeadTile);
+				if (result) { // if result is an array, add result to tileChanges and stop executing functions
+					if (!Array.isArray(result)) console.error("Custom function must return an array");
+					else {
+						snakeTileChanges.push(...result);
+						return false; // stop executing functions
+					}
+				}
+				return true; // continue if we haven't returned anything yet
+			});
+			// if none of the functions returned anything, snake dies
+			if (killSnake) {
+				// undo head update and snakeTileChanges
+				snake.removeHead();
+				snakeTileChanges = [];
+				// kill snake
+				this.killSnake(snake);
+			}
+		}
+		// if it's not in bounds, the snake dies
+		else {
+			// undo head update and snakeTileChanges
+			snake.removeHead();
+			snakeTileChanges = [];
+			// kill snake
+			this.killSnake(snake);
+		}
+
+		// add snakeTileChanges to tileChanges
+		tileChanges.push(...snakeTileChanges);
+		
+		return tileChanges;
 	}
 	// updates tiles and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
@@ -159,7 +226,7 @@ class Game {
 		return x >= 0 && x < this.dimensions[0] && y >= 0 && y < this.dimensions[1];
 	}
 
-	// generates numFood food tiles
+	// generates numFood food tiles and updates board and other snakes
 	// log is whether to log progress to console
 	generateFood(numFood = 1, log = false) {
 		const tileChanges = [];

@@ -8,7 +8,9 @@ import BoardRow from "./board-row";
 
 // boardstate is a 2d array of tiles{position[2], color}
 // headpos is just [x, y]
-export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
+export default function Board({ boardState, headPos, tileSize }) {
+	const boardElement = useRef(null);
+
 	// save previous tileSize, so we can change tile size with NO transition
 	const previousTileSize = useRef(tileSize);
 	useEffect(() => { previousTileSize.current = tileSize; }, [tileSize]);
@@ -38,15 +40,26 @@ export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 		// get tileSize in pixels
 		const tileSizePx = tileSize;
 		// get number of tiles that fit on the screen left and right and up and down of head
-		const tilesX = Math.ceil(windowSize[0] / tileSizePx / 2);
-		const tilesY = Math.ceil(windowSize[1] / tileSizePx / 2);
+		const tilesX = Math.ceil(windowSize[0] / tileSizePx / 2) + 1;
+		const tilesY = Math.ceil(windowSize[1] / tileSizePx / 2) + 1;
+
+		// get current position of table, or use headPos if table is not rendered yet
+		let currentHeadPos = headPos;
+		if (boardElement.current) {
+			const boardRect = boardElement.current.getBoundingClientRect();
+			// convert to tile coordinates
+			currentHeadPos = [
+				Math.round((windowSize[0]/2 - boardRect.left) / tileSizePx),
+				Math.round((windowSize[1]/2 - boardRect.top) / tileSizePx)
+			];
+		}
 
 		// min and max y-index to be rendered
-		const minY = Math.max(0, Math.min(headPos[1] - tilesY, oldHeadPos[1] - tilesY));
-		const maxY = Math.min(boardState.length - 1, Math.max(headPos[1] + tilesY, oldHeadPos[1] + tilesY));
+		const minY = Math.max(0, Math.min(headPos[1] - tilesY, currentHeadPos[1] - tilesY));
+		const maxY = Math.min(boardState.length - 1, Math.max(headPos[1] + tilesY, currentHeadPos[1] + tilesY));
 		// min and max x-index to be rendered
-		const minX = Math.max(0, Math.min(headPos[0] - tilesX, oldHeadPos[0] - tilesX));
-		const maxX = Math.min(boardState[0].length - 1, Math.max(headPos[0] + tilesX, oldHeadPos[0] + tilesX));
+		const minX = Math.max(0, Math.min(headPos[0] - tilesX, currentHeadPos[0] - tilesX));
+		const maxX = Math.min(boardState[0].length - 1, Math.max(headPos[0] + tilesX, currentHeadPos[0] + tilesX));
 
 		// crop y, then x
 		const croppedBoardState = boardState.slice(minY, maxY + 1)
@@ -60,14 +73,14 @@ export default function Board({ boardState, oldHeadPos, headPos, tileSize }) {
 		};
 
 		return [croppedBoardState, boardCropPadding];
-	}, [boardState, oldHeadPos, headPos, tileSize, windowSize]);
+	}, [boardState, headPos, boardElement, tileSize, windowSize]);
 	
 	// generate table
 	const rows = useMemo(() => croppedBoardState.map((row, index) =>
 		<BoardRow key={index} row={row} tileSize={tileSize} />
 	), [croppedBoardState, tileSize]);
 	return (
-		<div style={{...boardTransition, ...boardPosStyle, ...boardCropOffset, ...boardBorderStyle}} id={style['board']}>
+		<div style={{...boardTransition, ...boardPosStyle, ...boardCropOffset, ...boardBorderStyle}} id={style['board']} ref={boardElement}>
 			{rows}
 		</div>
 	);

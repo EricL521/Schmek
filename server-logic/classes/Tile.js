@@ -23,8 +23,19 @@ class Tile {
 
 		this.type = type;
 	}
-
 	get positionString() { return Tile.positionToString(this.position); }
+
+	// NOTE: this function excludes this.dead, which is added when a snake dies
+	toJSON() {
+		return {
+			position: this.position,
+			color: this.color,
+			size: this.size,
+			borderRadius: this.borderRadius,
+			direction: this.direction,
+			type: this.type
+		};
+	}
 }
 
 module.exports = { Tile };
