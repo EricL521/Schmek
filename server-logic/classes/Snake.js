@@ -10,7 +10,7 @@ class Snake extends AbilityManager {
 	static defaultUpdateFunctions = [
 		(_, snake, newHeadTile) => { if (!newHeadTile) return snake.updateTail(); },
 		(_, snake, newHeadTile) => { if (newHeadTile.positionString === snake.tail.positionString) return snake.updateTail(false); },
-		(game, _, newHeadTile) => { if (newHeadTile.type === "food") { game.generateFood(); return []; } },
+		(game, snake, newHeadTile) => { if (newHeadTile.type === "food") { game.generateFood(); return snake.updateTailBorderRadius(); } },
 	];
 
 	constructor(socket, name, color, body, direction) {
@@ -47,8 +47,9 @@ class Snake extends AbilityManager {
 	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
 
 	// returns tileChanges
-	// adds round to current head
+	// adds round to current head (when snake turns, we add a curve to one of the corners)
 	// updating is whether we're adding a new head, or updating the head without moving
+	// in which case, we make the head a semi-circle
 	updateHeadBorderRadius(updating = true) {
 		this.emit("updateHeadBorderRadius");
 
@@ -70,7 +71,6 @@ class Snake extends AbilityManager {
 
 		// only update if snake is moving
 		if (this.speed !== 0) {
-			const head = this.head;
 			// add rounded corner to old head, depending on current direction and new direction
 			if (this.currentDirection) {
 				// NOTE: y is inverted, so 1 is down, -1 is up
@@ -78,13 +78,13 @@ class Snake extends AbilityManager {
 					this.newDirection[0] - this.currentDirection[0],
 					this.newDirection[1] - this.currentDirection[1]
 				];
-				head.borderRadius = [
+				this.head.borderRadius = [
 					deltaDirection[0] == 1 && deltaDirection[1] == 1 ? 100 : 0,
 					deltaDirection[0] == -1 && deltaDirection[1] == 1 ? 100 : 0,
 					deltaDirection[0] == -1 && deltaDirection[1] == -1 ? 100 : 0,
 					deltaDirection[0] == 1 && deltaDirection[1] == -1 ? 100 : 0
 				];
-				tileChanges.push(head); // add old head to tileChanges
+				tileChanges.push(this.head); // add old head to tileChanges
 			}
 		}
 
