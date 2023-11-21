@@ -1,41 +1,9 @@
-const fs  = require("fs");
-const path = require("path");
 const { Tile } = require("./Tile.js");
-const EventEmitter = require("events");
-
-console.log("Loading snake abilities...");
-// import all abilities from snake-abilities folder
-// structure of folder: abilityName/abilityName.js, along with subfolders, which are subabilities
-const snakeAbilitiesPath = path.join(__dirname, "..", "snake-abilities");
-const abilities = new Map();
-const processDir = (dirPath, dir) => {
-	// if not a directory, skip
-	if (!dir.isDirectory()) return;
-
-	// get ability
-	const ability = require(path.join(dirPath, dir.name, `${dir.name}.js`));
-	// get subabilities
-	const subabilities = new Map();
-	const subPath = path.join(dirPath, dir.name);
-	fs.readdirSync(subPath, { withFileTypes: true }).map(dir => processDir(subPath, dir)).forEach(subability => {
-		if (subability) subabilities.set(subability.name, subability);
-	});
-
-	// return ability
-	return {
-		// turn name into camel case
-		name: dir.name.split("-").map((word, index) => index > 0? word[0].toUpperCase() + word.slice(1): word).join(""),
-		... ability, // has a activate and onmount function
-		subabilities: subabilities,
-	}
-};
-fs.readdirSync(snakeAbilitiesPath, { withFileTypes: true }).map(dir => processDir(snakeAbilitiesPath, dir)).forEach(ability => {
-	if (ability) abilities.set(ability.name, ability);
-});
+const { AbilityManager } = require("./Ability-Manager.js");
 
 // represents a snake, dead or alive
 // if alive, it represents a person's snake
-class Snake extends EventEmitter {
+class Snake extends AbilityManager {
 	// functions that run to check snake head during update
 	// runs ever function in the array, in order until one returns something an array
 	// if none of them return something truthy, the snake dies
@@ -60,12 +28,6 @@ class Snake extends EventEmitter {
 
 		// custom update functions, which run AFTER default update functions
 		this.customUpdateFunctions = [];
-
-		// start with no ability
-		// is an array of strings, which describe the ability and subability
-		this.abilityPath = [];
-		this.initializeAbility(); // initialize this.ability
-		this.lastAbilityActivation = null; // last time ability was activated
 	}
 
 	// returns new direction, NOTE: may not equal the direction passed in, depending on the current direction
@@ -83,40 +45,6 @@ class Snake extends EventEmitter {
 		return this.newDirection;
 	}
 	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
-
-	// add new ability to snake
-	upgradeAbility(subability) {
-		this.emit("upgradeAbility", subability);
-		this.abilityPath.push(subability);
-		this.initializeAbility();
-		// also call the ability's onmount function
-		if (this.ability.onmount) this.ability.onmount(this);
-	}
-	// initialize the ability
-	initializeAbility() {
-		let ability = abilities.get(this.abilityPath[0]);
-		for (let i = 1; i < this.abilityPath.length; i++)
-			ability = ability.subabilities.get(this.abilityPath[i]);
-		this.ability = ability;
-	}
-	// activates the snake's ability
-	activateAbility(game) {
-		// make sure snake is alive and has an activatable ability
-		if (!this.alive || !this.ability || !this.ability.activate) return;
-
-		this.emit("activateAbility");
-		// call and return output of ability
-		const output = this.ability.activate(game, this);
-		if (!output) return;
-		// update lastAbilityActivation
-		this.lastAbilityActivation = new Date();
-		return output;
-	}
-	// get time since last ability activation, in seconds
-	get timeSinceLastAbilityActivation() {
-		if (!this.lastAbilityActivation) return Infinity;		
-		return (Date.now() - this.lastAbilityActivation) / 1000;
-	}
 
 	// returns tileChanges
 	// adds round to current head
