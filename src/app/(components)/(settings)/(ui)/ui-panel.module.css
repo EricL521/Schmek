@@ -1,6 +1,6 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform, right;
+	transition-property: transform, right, visibility;
 	backface-visibility: hidden;
 }
 .interactive:hover, .interactive:focus-visible {
@@ -27,7 +27,9 @@
 	transform: scale(1.05);
 }
 #ui-panel.hidden {
+	transition-property: transform, right;
 	right: 100%;
+	visibility: hidden;
 }
 #ui-panel h3 {
 	margin: 0;
