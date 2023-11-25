@@ -1,6 +1,12 @@
 const { Tile } = require("./Tile.js");
 const { AbilityManager } = require("./Ability-Manager.js");
 
+// at what lengths of the snake to give abilities
+// NOTE: Currently, there is only 3 max upgrades, so there's 3 lengths
+const abilityUpgradeLengths = new Set([
+	10, 20, 40
+]);
+
 // represents a snake, dead or alive
 // if alive, it represents a person's snake
 class Snake extends AbilityManager {
@@ -10,11 +16,18 @@ class Snake extends AbilityManager {
 	static defaultUpdateFunctions = [
 		(_, snake, newHeadTile) => { if (!newHeadTile) return snake.updateTail(); },
 		(_, snake, newHeadTile) => { if (newHeadTile.positionString === snake.tail.positionString) return snake.updateTail(false); },
-		(game, snake, newHeadTile) => { if (newHeadTile.type === "food") { game.generateFood(); return snake.updateTailBorderRadius(); } },
+		(game, snake, newHeadTile) => { 
+			if (newHeadTile.type === "food") { 
+				snake.emit("grow"); // used in abilityManager to determine giving abilities
+				game.generateFood(); 
+				return snake.updateTailBorderRadius(); 
+			} 
+		},
 	];
 
 	constructor(socket, name, color, body, direction) {
 		super();
+		this.initializeAbilityUpgradeListener();
 
 		this.socket = socket;
 		this.name = name;
@@ -28,6 +41,31 @@ class Snake extends AbilityManager {
 
 		// custom update functions, which run AFTER default update functions
 		this.customUpdateFunctions = [];
+	}
+	// adds listener for snake length, and emits event 
+	// for client to pick an ability or subability
+	initializeAbilityUpgradeListener() {
+		this.availableUpgrades = 0;
+		this.on("grow", () => {
+			// if snake length is in abilityUpgradeLengths, emit event
+			if (abilityUpgradeLengths.has(this.body.length)) {
+				this.availableUpgrades ++;
+				const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
+				this.socket.emit("abilityUpgrade", this.subabilitiesArray, isUpgrade);
+			}
+		});
+	}
+	// override default upgradeAbility to add availableUpgrades logic
+	// returns [subabilitiesArray, isUpgrade]
+	// NOTE: subabilitiesArray only returns if ability was added successfully and upgrades are available
+	upgradeAbility(subability) {
+		if (this.availableUpgrades <= 0) return [null];
+
+		// result is whether or not it was successful
+		const result = super.upgradeAbility(subability);
+		if (result) this.availableUpgrades --;
+		const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
+		return [result && this.availableUpgrades > 0 ? this.subabilitiesArray : null, isUpgrade];
 	}
 
 	// returns new direction, NOTE: may not equal the direction passed in, depending on the current direction

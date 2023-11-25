@@ -24,8 +24,7 @@ const processDir = (dirPath, dir) => {
 
 	// return ability
 	return {
-		// turn name into camel case
-		name: dir.name.split("-").map((word, index) => index > 0? word[0].toUpperCase() + word.slice(1): word).join(""),
+		name: dir.name,
 		... ability, // has a activate and onmount function
 		subabilities: subabilities,
 	}
@@ -46,13 +45,22 @@ class AbilityManager extends EventEmitter {
 		this.lastAbilityActivation = null; // last time ability was activated
 	}
 
+	// returns subabilities, if there is an ability, or just all abilities
+	get subabilities() { return this.ability? this.ability.subabilities?? new Map() : abilities; }
+	// returns array of this.subabilities names
+	get subabilitiesArray() { return Array.from(this.subabilities.keys()); }
 	// add new ability to snake
 	upgradeAbility(subability) {
+		// if subability isn't available, return false
+		if (!this.subabilities.has(subability)) return false;
+
+		// otherwise, update abilityPath and initialize ability
 		this.emit("upgradeAbility", subability);
 		this.abilityPath.push(subability);
 		this.initializeAbility();
 		// also call the ability's onmount function
 		if (this.ability.onmount) this.ability.onmount(this);
+		return true;
 	}
 	// initialize the ability
 	initializeAbility() {

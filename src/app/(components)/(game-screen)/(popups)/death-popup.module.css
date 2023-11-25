@@ -1,6 +1,6 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform, border, background-color, color, opacity;
+	transition-property: transform, opacity, visibility;
 	backface-visibility: hidden;
 }
 .interactive:hover, .interactive:focus-visible, .interactive:focus-within {
@@ -26,6 +26,8 @@
 	align-items: center;
 }
 #death-popup.hidden {
+	transition-property: transform, opacity;
+	visibility: hidden;
 	pointer-events: none;
 	opacity: 0;
 }

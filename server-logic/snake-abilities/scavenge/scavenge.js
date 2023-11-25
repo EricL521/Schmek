@@ -10,6 +10,7 @@ module.exports = {
 				snake.deadSnakeEatenAmount ++;
 				// if we've eaten 3 tiles, grow snake
 				if (snake.deadSnakeEatenAmount >= deadSnakeToGrow) {
+					snake.emit("grow");
 					snake.deadSnakeEatenAmount = 0; // reset counter
 					return []; // no tile changes
 				}
