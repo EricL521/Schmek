@@ -1,22 +1,20 @@
 .interactive {
 	transition: 0.25s ease;
-	transition-property: transform, visiblity;
+	transition-property: transform;
 	backface-visibility: hidden;
 }
 .interactive:hover, .interactive:focus-visible, .interactive:focus-within {
 	transform: scale(1.05);
 }
 
-.centerer-div {
+#centerer-div {
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100vw;
 	
-	transition: 0.25s ease;
-	transition-property: visiblity, transform;
+    transition: visibility 0.25s ease, transform 0.25s ease;
 	backface-visibility: hidden;
-	transform: translateY(0%);
 
 	display: flex;
 	justify-content: center;
@@ -24,10 +22,9 @@
 
 	pointer-events: none;
 }
-.centerer-div.hidden {
-	transition-property: transform;
-	transform: translateY(-100%);
+#centerer-div.hidden {
 	visibility: hidden;
+	transform: translateY(-100%);
 }
 
 #upgrade-ability-popup {

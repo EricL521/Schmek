@@ -27,7 +27,6 @@
 	transform: scale(1.05);
 }
 #ui-panel.hidden {
-	transition-property: transform, right;
 	right: 100%;
 	visibility: hidden;
 }

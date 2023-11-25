@@ -28,7 +28,6 @@
 	transform: scale(1.05);
 }
 #keybinds-panel.hidden {
-	transition-property: transform, right;
 	right: 100%;
 	visibility: hidden;
 }

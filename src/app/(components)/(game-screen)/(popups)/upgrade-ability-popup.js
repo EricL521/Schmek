@@ -13,12 +13,12 @@ export default function UpgradeAbilityPopup({ options, show, isUpgrade, upgradeA
 	};
 
 	return (
-		<div className={[styles["centerer-div"], show? "" : styles["hidden"]].join(" ")}>
-			<div className={styles["interactive"]} id={styles["upgrade-ability-popup"]}>
-				<h2 className={styles["interactive"]}>{isUpgrade? "Upgrade ability" : "Pick an ability"}</h2>
-				<div id={styles["abilities-list"]}>
+		<div id={styles['centerer-div']} className={show? '' : styles['hidden']}>
+			<div className={styles['interactive']} id={styles['upgrade-ability-popup']}>
+				<h2 className={styles['interactive']}>{isUpgrade? "Upgrade ability" : "Pick an ability"}</h2>
+				<div id={styles['abilities-list']}>
 					{options?.map((option) => (
-						<button key={option} className={styles["interactive"]} onClick={() => onButtonClick(option)}>
+						<button key={option} className={styles['interactive']} onClick={() => onButtonClick(option)}>
 							{option.replace('-', ' ')}
 						</button>
 					))}
