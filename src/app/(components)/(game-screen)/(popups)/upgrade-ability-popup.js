@@ -19,7 +19,7 @@ export default function UpgradeAbilityPopup({ options, show, isUpgrade, upgradeA
 				<div id={styles['abilities-list']}>
 					{options?.map((option) => (
 						<button key={option} className={styles['interactive']} onClick={() => onButtonClick(option)}>
-							{option.replace('-', ' ')}
+							{option.replaceAll('-', ' ')}
 						</button>
 					))}
 				</div>
