@@ -10,8 +10,9 @@ const directions = new Set([
 ].map(dir => dir.join()));
 
 module.exports = {
-	activate: (game, snake, proportionKept = 0.5, cooldown = 5) => {
-		const output = fakeSnakeAbility.activate(game, snake, proportionKept, cooldown);
+	// no onmount function, because we are keeping the same cooldown
+	activate: (game, snake, proportionKept = 0.5) => {
+		const output = fakeSnakeAbility.activate(game, snake, proportionKept);
 		if (!output) return;
 
 		// get tail snake

@@ -8,9 +8,11 @@ const { tps } = require("../../game-config.json");
 // and cooldown is how long before the snake can use the ability again
 // returns true if it was succesful
 module.exports = {
-	activate: (game, snake, speed = 2, length = 10, cooldown = 10) => {
-		// check cooldown
-		if (snake.timeSinceLastAbilityActivation < cooldown) return;
+	onmount: (snake, cooldown = 10) => {
+		snake.cooldown = cooldown;
+	},
+	activate: (game, snake, speed = 2, length = 10) => {
+		// if the speed is not any faster, don't do anything
 		if (speed <= 1) return;
 
 		let totalUpdates = length;

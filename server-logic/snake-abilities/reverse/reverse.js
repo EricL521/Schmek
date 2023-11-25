@@ -4,9 +4,10 @@
 // cooldown is in seconds
 // returns [tileChanges, [newHeadPos, newDirection]]
 module.exports = {
-	activate: (game, snake, proportionKept = 0.5, cooldown = 5) => {
-		// check cooldown
-		if (snake.timeSinceLastAbilityActivation < cooldown) return;
+	onmount: (snake, cooldown = 5) => {
+		snake.cooldown = cooldown;
+	},
+	activate: (game, snake, proportionKept = 0.5) => {
 		// make sure snake length is 4 or greater
 		if (snake.body.length < 4) return;
 

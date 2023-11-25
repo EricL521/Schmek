@@ -43,6 +43,7 @@ class AbilityManager extends EventEmitter {
 		this.abilityPath = [];
 		this.initializeAbility(); // initialize this.ability
 		this.lastAbilityActivation = null; // last time ability was activated
+		this.cooldown = 0; // cooldown of ability, in seconds
 	}
 
 	// returns subabilities, if there is an ability, or just all abilities
@@ -73,6 +74,8 @@ class AbilityManager extends EventEmitter {
 	activateAbility(game) {
 		// make sure snake is alive and has an activatable ability
 		if (!this.alive || !this.ability || !this.ability.activate) return;
+		// check cooldown
+		if (this.timeSinceLastAbilityActivation < this.cooldown) return;
 
 		this.emit("activateAbility");
 		// call and return output of ability
