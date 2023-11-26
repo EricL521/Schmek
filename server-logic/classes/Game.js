@@ -112,13 +112,14 @@ class Game {
 		if (!output) return; // if snake doesn't have an ability, return
 
 		const [tileChanges, clientInfo] = [output[0], output[1]];
-		// update board and other snakes
+		// update board and snakes
 		if (tileChanges && tileChanges.length > 0) {
 			this.updateBoard(tileChanges);
 			this.updatePlayers(tileChanges);
 		}
 
-		return clientInfo;
+		// sometimes clientInfo is null, but the ability has still executed, so we return empty array
+		return clientInfo?? [];
 	}
 
 	// updates tps times per second

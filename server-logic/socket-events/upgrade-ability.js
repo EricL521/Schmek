@@ -6,7 +6,7 @@ module.exports = {
 		// if snake doesn't exist or is dead, do nothing
 		if ( !snake || !snake.alive ) return;
 
-		const [newOptions, isUpgrade] = snake.upgradeAbility(abilityName);
-		callback(newOptions, isUpgrade);
+		const [newOptions, isUpgrade, cooldown] = snake.upgradeAbility(abilityName);
+		callback(newOptions, isUpgrade, cooldown);
 	}
 };

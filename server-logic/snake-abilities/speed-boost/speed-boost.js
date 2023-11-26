@@ -43,7 +43,7 @@ module.exports = {
 		};
 		snake.on("updateHead", updateListener);
 
-		// return tileChanges and newHeadPos
+		// return true to signify that the ability was activated
 		return true;
 	}
 };

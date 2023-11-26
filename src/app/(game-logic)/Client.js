@@ -13,6 +13,8 @@ class Client extends KeybindManager {
 
 		this.boardState;
 		this.headPos;
+		this.cooldown = 0; // cooldown in seconds of ability
+		this.lastAbilityUse = new Date(0); // time of last ability use
 
 		this.alive = false; // don't update direction if dead
 		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
@@ -28,23 +30,36 @@ class Client extends KeybindManager {
 		this.socket.on("gameUpdate", (tileChanges, headPos) => {
 			// update board state & head position
 			this.updateBoard(tileChanges);
-			if (headPos) {
-				this.headPos = headPos;
-			}
+			const oldHeadPos = this.headPos;
+			this.headPos = headPos?? this.headPos;
 
-			this.emit("gameUpdate", this.boardState, this.headPos, this.olderHeadPos);
+			// emit game update if there are tile changes or head position changes
+			if ( (tileChanges && tileChanges.length > 0) || (headPos && (headPos[0] != oldHeadPos[0] || headPos[1] != oldHeadPos[1] )) )
+				this.emit("gameUpdate", this.boardState, this.headPos);
 		});
 
-		this.socket.on("abilityUpgrade", (options, isUpgrade) => {
-			this.emit("abilityUpgrade", options, isUpgrade);
+		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
+			this.cooldown = newCooldown?? this.cooldown; // update cooldown
+			this.emit("abilityUpgrade", newOptions, isUpgrade, this.cooldown);
 		});
 
 		this.socket.on("death", (data) => {
 			this.alive = false;
 
 			this.emit("death", data);
-			// also get rid of ability upgrade popup
-			this.emit("abilityUpgrade", null);
+			// also get rid of ability upgrade popup and cooldown
+			this.cooldown = 0;
+			this.emit("abilityUpgrade", null, false, this.cooldown);
+			this.lastAbilityUse = new Date(0);
+			this.emit("abilityActivated", this.lastAbilityUse);
+		});
+	}
+	// sends message to server to upgrade ability
+	upgradeAbility(abilityName) {
+		this.socket.emit("upgradeAbility", abilityName, (newOptions, isUpgrade, newCooldown) => {
+			this.cooldown = newCooldown?? this.cooldown; // update cooldown
+			// NOTE: newOptions may be null
+			this.emit("abilityUpgrade", newOptions, isUpgrade, this.cooldown);
 		});
 	}
 	// adds listeners for this client's events
@@ -62,20 +77,19 @@ class Client extends KeybindManager {
 		});
 
 		this.on("activateAbility", () => {
+			// check if cooldown is over, if so don't activate ability
+			const timeSinceLastAbilityUse = Date.now() - this.lastAbilityUse;
+			if (timeSinceLastAbilityUse < this.cooldown * 1000) return;
+
 			this.socket.emit("activateAbility", (headPos, direction) => {
 				this.headPos = headPos ?? this.headPos;
 				this.direction = direction ?? this.direction;
+				// callback is only called if ability is activated, so set last ability use to now
+				this.lastAbilityUse = new Date(); 
+				this.emit("abilityActivated", this.lastAbilityUse, this.cooldown);
 	
 				this.emit("gameUpdate", null, this.headPos);
 			});
-		});
-	}
-
-	// sends message to server to upgrade ability
-	upgradeAbility(abilityName) {
-		this.socket.emit("upgradeAbility", abilityName, (newOptions, isUpgrade) => {
-			// NOTE: newOptions may be null
-			this.emit("abilityUpgrade", newOptions, isUpgrade);
 		});
 	}
 

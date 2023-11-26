@@ -56,7 +56,7 @@ class Snake extends AbilityManager {
 		});
 	}
 	// override default upgradeAbility to add availableUpgrades logic
-	// returns [subabilitiesArray, isUpgrade]
+	// returns [subabilitiesArray, isUpgrade, cooldown]
 	// NOTE: subabilitiesArray only returns if ability was added successfully and upgrades are available
 	upgradeAbility(subability) {
 		if (this.availableUpgrades <= 0) return [null];
@@ -65,7 +65,7 @@ class Snake extends AbilityManager {
 		const result = super.upgradeAbility(subability);
 		if (result) this.availableUpgrades --;
 		const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
-		return [result && this.availableUpgrades > 0 ? this.subabilitiesArray : null, isUpgrade];
+		return [result && this.availableUpgrades > 0 ? this.subabilitiesArray : null, isUpgrade, this.cooldown];
 	}
 
 	// returns new direction, NOTE: may not equal the direction passed in, depending on the current direction
