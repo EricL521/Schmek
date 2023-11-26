@@ -1,6 +1,6 @@
 // shows ability and ability cooldown
 
-import { useRef } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 
 import styles from './ability-indicator.module.css';
 
@@ -10,8 +10,16 @@ export default function AbilityIndicator({ show, cooldown, lastAbilityUse }) {
 	const timeSinceLastAbilityUse = (Date.now() - lastAbilityUse) / 1000;
 	const remainingCooldown = Math.max(0, cooldown - timeSinceLastAbilityUse);
 	const animationProportion = remainingCooldown / cooldown;
-	// restart animation
-	animateRef.current?.beginElement();
+	// restart animation, AFTER render
+	useEffect(() => animateRef.current?.beginElement());
+
+	const [, forceUpdate] = useReducer(x => x + 1, 0);
+	// set timeout for when cooldown is over to force update
+	useEffect(() => {
+		const timeout = setTimeout(forceUpdate, remainingCooldown * 1000);
+		// clear timeout on re-render
+		return () => clearTimeout(timeout);
+	}, [remainingCooldown]);
 
 	return (
 		<div id={styles['positioning-div']} className={show? '' : styles['hidden']}>
