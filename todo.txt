@@ -1,0 +1,6 @@
+TODO list:
+- Adding animation for snakes moving
+- Add keybinds for choosing abilities
+- Add more abilities
+	- Tunneling/Flying
+	- Disguise??
