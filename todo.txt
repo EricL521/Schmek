@@ -6,4 +6,3 @@ TODO list:
 	- Tunneling/Flying
 	- Disguise??
 - Make a lil logo
-- Move logic for listeners from game-screen to components

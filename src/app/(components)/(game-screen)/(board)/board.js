@@ -8,12 +8,28 @@ import BoardRow from "./board-row";
 
 // boardstate is a 2d array of tiles{position[2], color}
 // headpos is just [x, y]
-export default function Board({ boardState, headPos, tileSize }) {
+export default function Board({ client, tileSize }) {
+	// add listeners for client events
+	useEffect(() => {
+		// add listener for when board is updated
+		const gameUpdateListener = (boardState, headPos) => {
+			if (boardState) setBoardState([... boardState]);
+			if (headPos) setHeadPos([... headPos]);
+		};
+		client.on("gameUpdate", gameUpdateListener);
+
+		// return function to remove listener
+		return () => client.removeListener("gameUpdate", gameUpdateListener);
+	}, [client]);
+	// initialize board state and head position to client's
+	const [boardState, setBoardState] = useState(client?.boardState);
+	const [headPos, setHeadPos] = useState(client?.headPos);
+
 	const boardElement = useRef(null);
 
 	// save previous tileSize, so we can change tile size with NO transition
 	const previousTileSize = useRef(tileSize);
-	useEffect(() => { previousTileSize.current = tileSize; }, [tileSize]);
+	useEffect(() => { previousTileSize.current = tileSize; }, [tileSize]); // NOTE: this runs after everything else
 	const boardTransition = tileSize == previousTileSize.current? {} : {transition: 'none'};
 	// offset board to make headPos the center
 	const boardPosStyle = useMemo(() => ({

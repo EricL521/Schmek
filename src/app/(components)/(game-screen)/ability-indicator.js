@@ -1,10 +1,35 @@
 // shows ability and ability cooldown
 
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 
 import styles from './ability-indicator.module.css';
 
-export default function AbilityIndicator({ show, cooldown, lastAbilityUse }) {
+export default function AbilityIndicator({ client }) {
+	// add listeners for client events
+	useEffect(() => {
+		// add listener for when a snake upgrade is available
+		const abilityUpgradeListener = (_0, _1, cooldown) => {
+			if (typeof cooldown === "number") setCooldown(cooldown);
+		};
+		client.on("abilityUpgrade", abilityUpgradeListener);
+
+		// add listener for when ability is activated
+		const abilityActivatedListener = (lastAbilityUse, _) => {
+			setLastAbilityUse(lastAbilityUse);
+		};
+		client.on("abilityActivated", abilityActivatedListener);
+
+		// return function to remove listeners
+		return () => {
+			client.removeListener("abilityUpgrade", abilityUpgradeListener);
+			client.removeListener("abilityActivated", abilityActivatedListener);
+		};
+	}, [client]);
+	// store ability cooldown and last ability use
+	const [cooldown, setCooldown] = useState(client?.cooldown);
+	const [lastAbilityUse, setLastAbilityUse] = useState(client?.lastAbilityUse);
+
+	// html object of animation element
 	const animateRef = useRef(null);
 
 	const timeSinceLastAbilityUse = (Date.now() - lastAbilityUse) / 1000;
@@ -22,7 +47,7 @@ export default function AbilityIndicator({ show, cooldown, lastAbilityUse }) {
 	}, [remainingCooldown]);
 
 	return (
-		<div id={styles['positioning-div']} className={show? '' : styles['hidden']}>
+		<div id={styles['positioning-div']} className={cooldown > 0? '' : styles['hidden']}>
 			<div id={styles['ability-indicator']} className={styles['interactive']}>
 				{/* Copied from https://stackoverflow.com/questions/26178095/svg-circle-animation */}
 				<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
