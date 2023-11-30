@@ -9,7 +9,11 @@ class KeybindManager extends EventEmitter {
 		["moveDown", ["direction", [0, 1]]],
 		["moveLeft", ["direction", [-1, 0]]],
 		["moveRight", ["direction", [1, 0]]],
-		["activateAbility", ["activateAbility"]]
+		["activateAbility", ["activateAbility"]],
+		["selectAbilityUpgrade1", ["upgradeAbility", 0]],
+		["selectAbilityUpgrade2", ["upgradeAbility", 1]],
+		["selectAbilityUpgrade3", ["upgradeAbility", 2]],
+		["selectAbilityUpgrade4", ["upgradeAbility", 3]],
 	]);}
 	// maps key names to actions
 	static get defaultControls() {return new Map([
@@ -23,6 +27,10 @@ class KeybindManager extends EventEmitter {
 		["a", new Set(["moveLeft"])],
 		["d", new Set(["moveRight"])],
 		[" ", new Set(["activateAbility"])],
+		["1", new Set(["selectAbilityUpgrade1"])],
+		["2", new Set(["selectAbilityUpgrade2"])],
+		["3", new Set(["selectAbilityUpgrade3"])],
+		["4", new Set(["selectAbilityUpgrade4"])],
 	]);}
 	// also make the above non-static
 	get actions() {return KeybindManager.actions;}

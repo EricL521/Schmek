@@ -15,6 +15,7 @@ class Client extends KeybindManager {
 		this.headPos;
 		this.cooldown = 0; // cooldown in seconds of ability
 		this.lastAbilityUse = new Date(0); // time of last ability use
+		this.abilityUpgrades; // possible ability upgrade paths
 
 		this.alive = false; // don't update direction if dead
 		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
@@ -40,7 +41,8 @@ class Client extends KeybindManager {
 
 		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
 			this.cooldown = newCooldown?? this.cooldown; // update cooldown
-			this.emit("abilityUpgrade", newOptions, isUpgrade, this.cooldown);
+			this.abilityUpgrades = newOptions; // update ability upgrades
+			this.emit("abilityUpgrade", this.abilityUpgrades, isUpgrade, this.cooldown);
 		});
 
 		this.socket.on("death", (data) => {
@@ -58,11 +60,13 @@ class Client extends KeybindManager {
 	upgradeAbility(abilityName) {
 		this.socket.emit("upgradeAbility", abilityName, (newOptions, isUpgrade, newCooldown) => {
 			this.cooldown = newCooldown?? this.cooldown; // update cooldown
+			this.abilityUpgrades = newOptions; // update ability upgrades
 			// NOTE: newOptions may be null
 			this.emit("abilityUpgrade", newOptions, isUpgrade, this.cooldown);
 		});
 	}
 	// adds listeners for this client's events
+	// these are for keybinds
 	initializeClient() {
 		// save controls to local storage when they change
 		this.on('controlsChange', () => localStorage.setItem('controlsArray', JSON.stringify(this.controlsArray)));
@@ -90,6 +94,13 @@ class Client extends KeybindManager {
 	
 				this.emit("gameUpdate", null, this.headPos);
 			});
+		});
+
+		this.on("upgradeAbility", (index) => {
+			if (!this.abilityUpgrades) return; // can only upgrade if upgrades are available
+			
+			const abilityName = this.abilityUpgrades[index];
+			if (abilityName) this.upgradeAbility(abilityName);
 		});
 	}
 
