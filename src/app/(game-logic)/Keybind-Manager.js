@@ -37,6 +37,7 @@ class KeybindManager extends EventEmitter {
 		if (controls) {
 			this.controls = controls;
 			this.controlsArray = this.genControlsArray();
+			this.reverseControls = this.genReverseControlsMap();
 		}
 		else {
 			// check local storage for controls
@@ -44,11 +45,13 @@ class KeybindManager extends EventEmitter {
 			if (storedControlsArray) {
 				this.controlsArray = JSON.parse(storedControlsArray);
 				this.controls = this.genControlsMap(); 
+				this.reverseControls = this.genReverseControlsMap();
 			}
 			// otherwise use default controls'
 			else {
 				this.controls = KeybindManager.defaultControls;
 				this.controlsArray = this.genControlsArray();
+				this.reverseControls = this.genReverseControlsMap();
 			}
 		}
 	}
@@ -71,8 +74,19 @@ class KeybindManager extends EventEmitter {
 		}
 		return controls;
 	}
+	genReverseControlsMap() {
+		// reverses controls, goes from actions -> controls
+		const reverseControls = new Map();
+		for (const [key, action] of this.controlsArray) {
+			const controls = reverseControls.get(action);
+			if (controls) controls.add(key);
+			else reverseControls.set(action, new Set([key]));
+		}
+		return reverseControls;
+	}
+	// changes the keybind at index of controlsArray to the new key and action
 	setKeybind(index, key, action) {
-		// remove old action from controls
+		// remove old action from controls and reverseControls
 		const oldKey = this.controlsArray[index][0];
 		const oldAction = this.controlsArray[index][1];
 		if (oldKey == key && oldAction == action) return; // don't do anything if keybind is the same
@@ -81,38 +95,58 @@ class KeybindManager extends EventEmitter {
 			oldActions.delete(oldAction);
 			if (oldKey !== key && oldActions.size == 0) this.controls.delete(oldKey);
 		}
+		const oldControls = this.reverseControls.get(oldAction);
+		if (oldControls) {
+			oldControls.delete(oldKey);
+			if (oldAction !== action && oldControls.size == 0) this.reverseControls.delete(oldKey);
+		}
 
-		// update controlsArray and controls
+		// update controls
 		const actions = this.controls.get(key);
 		// if action already is there, set action to "" instead
 		if (actions && actions.has(action)) action = "";
 		if (actions) actions.add(action);
 		else this.controls.set(key, new Set([action]));
+		// update controlsArray
 		this.controlsArray[index] = [key, action];
+		// update reverseControls
+		const controls = this.reverseControls.get(action);
+		if (controls) controls.add(key);
+		else this.reverseControls.set(action, new Set([key]));
 		
 		// emit event to update local storage
 		this.emit("controlsChange");
 	}
 	addKeybind(key, action) {
-		// update controlsArray and controls
+		// update controls
 		const actions = this.controls.get(key);
 		if (actions) actions.add(action);
 		else this.controls.set(key, new Set([action]));
+		// update controlsArray
 		this.controlsArray.unshift([key, action]);
+		// update reverseControls
+		const controls = this.reverseControls.get(action);
+		if (controls) controls.add(key);
+		else this.reverseControls.set(action, new Set([key]));
 		
 		// emit event to update local storage
 		this.emit("controlsChange");
 	}
 	removeKeybind(index) {
-		// remove action from controls
 		const key = this.controlsArray[index][0];
 		const action = this.controlsArray[index][1];
+		// remove action from controls
 		const actions = this.controls.get(key);
 		if (actions) {
 			actions.delete(action);
 			if (actions.size == 0) this.controls.delete(key);
 		}
-
+		// remove key from reverseControls
+		const controls = this.reverseControls.get(action);
+		if (controls) {
+			controls.delete(key);
+			if (controls.size == 0) this.reverseControls.delete(action);
+		}
 		// update controlsArray
 		this.controlsArray.splice(index, 1);
 
@@ -125,8 +159,9 @@ class KeybindManager extends EventEmitter {
 	}
 	// overrides all keybinds with default keybinds
 	resetKeybinds() {
-		// reset controls and controlsArray
+		// reset controls reverseControls and controlsArray
 		this.controls = KeybindManager.defaultControls;
+		this.reverseControls = this.genReverseControlsMap();
 		this.controlsArray = this.genControlsArray();
 
 		// emit event to update local storage

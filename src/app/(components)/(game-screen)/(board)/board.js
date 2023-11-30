@@ -11,15 +11,19 @@ import BoardRow from "./board-row";
 export default function Board({ client, tileSize }) {
 	// add listeners for client events
 	useEffect(() => {
-		// add listener for when board is updated
+		// add listener for when board is updated or initialized
 		const gameUpdateListener = (boardState, headPos) => {
 			if (boardState) setBoardState([... boardState]);
 			if (headPos) setHeadPos([... headPos]);
 		};
 		client.on("gameUpdate", gameUpdateListener);
+		client.on("initialState", gameUpdateListener);
 
-		// return function to remove listener
-		return () => client.removeListener("gameUpdate", gameUpdateListener);
+		// return function to remove listeners
+		return () => {
+			client.removeListener("gameUpdate", gameUpdateListener);
+			client.removeListener("initialState", gameUpdateListener);
+		}
 	}, [client]);
 	// initialize board state and head position to client's
 	const [boardState, setBoardState] = useState(client?.boardState);

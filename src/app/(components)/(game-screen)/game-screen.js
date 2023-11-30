@@ -1,7 +1,5 @@
 // the actual game!
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import Board from './(board)/board';
 import styles from './game-screen.module.css';
 import DeathPopup from './(popups)/death-popup';
@@ -10,7 +8,7 @@ import AbilityIndicator from './ability-indicator';
 
 export default function GameScreen({ client, tileSize }) {
 	// NOTE: all logic is in the components
-	
+
 	return (
 		<div id={styles['game-screen']}>
 			<Board client={client} tileSize={tileSize}/>

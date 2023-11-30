@@ -9,11 +9,7 @@ import styles from './death-popup.module.css';
 export default function DeathPopup({ client }) {
 	// function for respawning
 	const respawn = useCallback(() => {
-		// add listeners for when board is updated and client respawns
-		client.once("initialState", (boardState, headPos) => {
-			setBoardState(boardState);
-			setHeadPos(headPos);
-		});
+		// add listeners for when board is initialized
 		client.once("boardInitialized", () => setDead(false));
 
 		// respawn
