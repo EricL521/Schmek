@@ -1,6 +1,5 @@
 TODO list:
 - Adding animation for snakes moving
-- Add quick turn around, ex. if you're moving up, then press right and down quickly
 - Add more abilities
 	- Tunneling/Flying
 	- Disguise??
