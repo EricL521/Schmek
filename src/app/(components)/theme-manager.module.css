@@ -55,14 +55,13 @@
 }
 #theme-manager:hover, #theme-manager.visible, #theme-manager:focus-within {
 	height: 120px;
-
-	#light {
-		bottom: 80px;
-	}
-	#system {
-		bottom: 40px;
-	}
-	#dark {
-		bottom: 0px;
-	}
+}
+#theme-manager:hover #light, #theme-manager.visible #light, #theme-manager:focus-within #light {
+	bottom: 80px;
+}
+#theme-manager:hover #system, #theme-manager.visible #system, #theme-manager:focus-within #system {
+	bottom: 40px;
+}
+#theme-manager:hover #dark, #theme-manager.visible #dark, #theme-manager:focus-within #dark {
+	bottom: 0px;
 }
