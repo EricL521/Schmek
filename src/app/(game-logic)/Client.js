@@ -170,9 +170,11 @@ class Client extends KeybindManager {
 	}
 
 	// applies tile changes to board state
+	// NOTE: also stores oldTile to tile.oldTile
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
 			const [x, y] = tile.position;
+			tile.oldTile = this.boardState[y][x];
 			this.boardState[y][x] = tile;
 		}
 	}

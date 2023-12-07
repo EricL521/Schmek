@@ -24,14 +24,27 @@
 	height: min-content;
 }
 
-.tile {
+.tile-container {
 	position: relative;
 
 	padding: 0;
 	margin: 0;
 }
-.tile div {
+.tile-clip {
 	position: absolute;
+	left: 0px;
+	top: 0px;
+
+	width: 100%;
+	height: 100%;
+
+	overflow: hidden;
+}
+.tile {
+	position: relative;
 	left: 0;
 	top: 0;
+
+	width: 100%;
+	height: 100%;
 }

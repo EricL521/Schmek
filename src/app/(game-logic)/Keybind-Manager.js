@@ -62,7 +62,7 @@ class KeybindManager extends EventEmitter {
 				this.controls = this.genControlsMap(); 
 				this.reverseControls = this.genReverseControlsMap();
 			}
-			// otherwise use default controls'
+			// otherwise use default controls
 			else {
 				this.controls = KeybindManager.defaultControls;
 				this.controlsArray = this.genControlsArray();
