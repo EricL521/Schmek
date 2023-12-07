@@ -10,8 +10,8 @@ module.exports = {
 		// get tail snake
 		const tailSnake = output[2];
 		// set initial direction
-		tailSnake.currentDirection = tailSnake.head.direction;
-		tailSnake.setDirection(tailSnake.head.direction);
+		tailSnake.currentDirection = tailSnake.head.directionOut;
+		tailSnake.setDirection(tailSnake.head.directionOut);
 		// revive tail snake
 		game.reviveSnake(tailSnake);
 

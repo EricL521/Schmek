@@ -1,6 +1,6 @@
 #board {
 	position: absolute;
-	transition: 0.5s ease;
+	transition-timing-function: linear;
 	transition-property: left, top;
 
 	width: min-content;
@@ -25,6 +25,13 @@
 }
 
 .tile {
+	position: relative;
+
 	padding: 0;
 	margin: 0;
+}
+.tile div {
+	position: absolute;
+	left: 0;
+	top: 0;
 }

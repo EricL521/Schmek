@@ -1,4 +1,7 @@
 import { EventEmitter } from 'events';
+// import game config
+import * as gameConfig from '../../../server-logic/game-config.json';
+const { playerTogglePauseGameEnabled } = gameConfig;
 
 // logic for changing and activating keybinds
 class KeybindManager extends EventEmitter {
@@ -14,6 +17,8 @@ class KeybindManager extends EventEmitter {
 		["selectAbilityUpgrade2", ["upgradeAbility", 1]],
 		["selectAbilityUpgrade3", ["upgradeAbility", 2]],
 		["selectAbilityUpgrade4", ["upgradeAbility", 3]],
+		// if playerTogglePauseGameEnabled is true, add pause game action
+		...(playerTogglePauseGameEnabled? [["togglePauseGame", ["togglePauseGame"]]]: [])
 	]);}
 	// maps key names to actions
 	static get defaultControls() {return new Map([
@@ -31,6 +36,8 @@ class KeybindManager extends EventEmitter {
 		["2", new Set(["selectAbilityUpgrade2"])],
 		["3", new Set(["selectAbilityUpgrade3"])],
 		["4", new Set(["selectAbilityUpgrade4"])],
+		// if playerTogglePauseGameEnabled is true, add pause game keybind
+		...(playerTogglePauseGameEnabled? [["p", new Set(["togglePauseGame"])]]: [])
 	]);}
 	// also make the above non-static
 	get actions() {return KeybindManager.actions;}

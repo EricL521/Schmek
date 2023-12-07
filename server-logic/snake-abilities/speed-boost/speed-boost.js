@@ -15,6 +15,9 @@ module.exports = {
 		// if the speed is not any faster, don't do anything
 		if (speed <= 1) return;
 
+		// increase snake speed variable
+		snake.speed = speed;
+
 		let totalUpdates = length;
 		let interval = null;
 		let updatesSinceGameUpdate = 0;
@@ -22,8 +25,9 @@ module.exports = {
 		const updateListener = () => {
 			// check if totalUpdates is 0
 			if (totalUpdates-- <= 0) {
-				// clear interval and listener
+				// clear interval and listener and reset snake speed
 				clearInterval(interval);
+				snake.speed = 1;
 				return snake.off("updateHead", updateListener);
 			}
 			

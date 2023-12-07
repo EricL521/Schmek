@@ -13,6 +13,9 @@ class Game {
 		this.nonPlayerSnakes = new Set(); // stores snakes that aren't controlled by a player
 		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
 		this.deadSnakes = new Set(); // stores dead snakes
+
+		// store tps of updates
+		this.tps = 0;
 		
 		// generate food
 		this.generateFood(numFood, true);
@@ -124,12 +127,14 @@ class Game {
 
 	// updates tps times per second
 	startUpdateLoop(tps) {
+		this.tps = tps;
 		this.interval = setInterval(() => {
 			this.update();
 		}, 1000 / tps);
 	}
 	// stops update loop
 	stopUpdateLoop() {
+		this.tps = 0;
 		clearInterval(this.interval);
 	}
 
@@ -214,7 +219,7 @@ class Game {
 		for (const socket of this.sockets) {
 			const snake = this.snakes.get(socket);
 			if (snake)
-				snake.sendGameUpdate(tileChanges);
+				snake.sendGameUpdate(tileChanges, this.tps);
 			else
 				socket.emit("gameUpdate", tileChanges, null);
 		}

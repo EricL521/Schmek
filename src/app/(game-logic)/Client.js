@@ -13,6 +13,8 @@ class Client extends KeybindManager {
 
 		this.boardState;
 		this.headPos;
+		this.travelSpeed = 0; // seconds per box traveled of snake
+
 		this.cooldown = 0; // cooldown in seconds of ability
 		this.lastAbilityUse = new Date(0); // time of last ability use
 		this.abilityUpgrades; // possible ability upgrade paths
@@ -28,14 +30,23 @@ class Client extends KeybindManager {
 
 	// add listeners for socket events
 	initializeSocket() {
-		this.socket.on("gameUpdate", (tileChanges, headPos) => {
+		this.socket.on("gameUpdate", (tileChanges, headPos, travelTPS) => {
 			// update board state & head position
 			this.updateBoard(tileChanges);
 			const oldHeadPos = this.headPos;
 			this.headPos = headPos?? this.headPos;
 
+			// update and emit travelSpeed
+			const travelSpeed = 1 / travelTPS;
+			if (!isNaN(travelSpeed)) {
+				const oldTravelSpeed = this.travelSpeed;
+				this.travelSpeed = travelSpeed;
+				if (oldTravelSpeed !== travelSpeed)
+					this.emit("travelSpeed", this.travelSpeed);
+			}
+
 			// emit game update if there are tile changes or head position changes
-			if ( (tileChanges && tileChanges.length > 0) || (headPos && (headPos[0] != oldHeadPos[0] || headPos[1] != oldHeadPos[1] )) )
+			if ((tileChanges && tileChanges.length > 0) || (this.headPos[0] != oldHeadPos[0] || this.headPos[1] != oldHeadPos[1]))
 				this.emit("gameUpdate", this.boardState, this.headPos);
 		});
 
@@ -102,6 +113,8 @@ class Client extends KeybindManager {
 			const abilityName = this.abilityUpgrades[index];
 			if (abilityName) this.upgradeAbility(abilityName);
 		});
+
+		this.on("togglePauseGame", () => this.socket.emit("togglePauseGame"));
 	}
 
 	setName(name) { this.name = name; }
@@ -118,12 +131,16 @@ class Client extends KeybindManager {
 	joinGameFunction() {
 		this.emit("loadingStatus", "Joining");
 		// send name to server
-		this.socket.emit("join", this.name, this.color, (dimensions, tiles, headPos) => {
+		this.socket.emit("join", this.name, this.color, (dimensions, tiles, headPos, serverTPS) => {
 			this.emit("loadingStatus", "Loading");
 
 			// snake is now alive, also reset direction
 			this.alive = true;
 			this.direction = [0, 0];
+
+			// set and emit travelSpeed
+			this.travelSpeed = 1 / serverTPS;
+			this.emit("travelSpeed", this.travelSpeed);
 
 			// initialize board state and head position
 			this.boardState = this.genBoard(dimensions, tiles);

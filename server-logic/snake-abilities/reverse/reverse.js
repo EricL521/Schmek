@@ -25,15 +25,13 @@ module.exports = {
 
 		// reverse body
 		snake.body.reverse();
+		// flip directionIn and directionOut of each Tile
+		for (const tile of snake.body) 
+			[tile.directionIn, tile.directionOut] = [tile.directionOut.map(x => -x), tile.directionIn.map(x => -x)]
 
 		// set current direction and newDirection to the direction of the new head
-		snake.currentDirection = snake.body[snake.body.length - 2].direction.map(x => -x);
-		snake.setDirection(snake.head.direction.map(x => -x));
-
-		// reverse direction of each Tile
-		for (let i = snake.body.length - 1; i >= 1; i--)
-			snake.body[i].direction = snake.body[i - 1].direction.map(x => -x);
-		snake.body[0].direction = snake.body[0].direction.map(x => -x);
+		snake.currentDirection = snake.head.directionIn;
+		snake.setDirection(snake.head.directionOut);
 
 		// update tail and head corners
 		tileChanges.push(...snake.updateTailBorderRadius());

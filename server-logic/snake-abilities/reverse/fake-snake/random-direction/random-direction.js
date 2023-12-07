@@ -18,10 +18,12 @@ module.exports = {
 		// get tail snake
 		const tailSnake = output[2];
 		// NOTE: update for updateheadborderadius because it creates the curve when turning
-		tailSnake.on("updateHeadBorderRadius", () => {
+		tailSnake.on("updateHeadBorderRadius", (updating) => {
+			if (!updating) return; // only run if we're about to update the head
+
 			const directionsCopy = new Set(directions);
-			// remove current direction from directionsCopy
-			directionsCopy.delete(tailSnake.head.direction.join());
+			// remove opposite current direction from directionsCopy (we can't go backwards)
+			directionsCopy.delete(tailSnake.currentDirection.map(x => -x).join());
 			// randomly choose a direction from directionsCopy
 			const directionString = Array.from(directionsCopy)[Math.floor(Math.random() * directionsCopy.size)];
 			const direction = directionString.split(",").map(num => parseInt(num));

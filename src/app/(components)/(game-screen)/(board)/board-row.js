@@ -1,20 +1,17 @@
 // renders one row of the board
 
+import BoardTile from "./board-tile";
+
 import style from "./board.module.css";
 
-export default function BoardRow({ row, tileSize }) {
-	const getTileStyle = (tile) => ({
-		width: tileSize + 'px',
-		height: tileSize + 'px',
-		backgroundColor: tile.color,
-		scale: tile.size !== 1 ? tile.size : null,
-		borderRadius: tile.borderRadius.map(x => x + '%').join(' ')
-	});
-	const getTileKey = (tile) => tile.type + ' ' + tile.position.join(',');
-	
+// travelSpeed is how long it takes the snake to move one grid space
+// IN SECONDS
+export default function BoardRow({ board, row, tileSize, travelSpeed }) {
+	const getTileKey = (tile) => tile.position.join(',');
 	// generate row tiles
 	const tiles = row.map(tile => 
-		<div key={getTileKey(tile)} id={getTileKey(tile)} style={getTileStyle(tile)} className={style["tile"]} />	
+		<BoardTile key={getTileKey(tile)} tileID={getTileKey(tile)} 
+			board={board} tile={tile} tileSize={tileSize} travelSpeed={travelSpeed} />
 	);
 
 	return (

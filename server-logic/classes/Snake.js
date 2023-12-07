@@ -15,15 +15,26 @@ class Snake extends AbilityManager {
 	// if none of them return something truthy, the snake dies
 	static defaultUpdateFunctions = [
 		(_, snake, newHeadTile) => { if (!newHeadTile) return snake.updateTail(); },
+		// NOTE: the false is to tell updateTail to not add the removed tail to tileChanges; it is changed by the head instead
 		(_, snake, newHeadTile) => { if (newHeadTile.positionString === snake.tail.positionString) return snake.updateTail(false); },
 		(game, snake, newHeadTile) => { 
 			if (newHeadTile.type === "food") { 
 				snake.emit("grow"); // used in abilityManager to determine giving abilities
 				game.generateFood(); 
-				return snake.updateTailBorderRadius(); 
-			} 
+				// if snake tail is still circular (from when snake first spawned), update it
+				if (snake.tail.borderRadius[0] == 50 && snake.tail.borderRadius[1] == 50 && 
+					snake.tail.borderRadius[2] == 50 && snake.tail.borderRadius[3] == 50)
+					return snake.updateTailBorderRadius(); 
+				// otherwise, don't update tail
+				return [];
+			}
 		},
 	];
+
+	// a helper function that sums an array
+	static sumArray(array) {
+		return array.reduce((a, b) => a + b, 0);
+	}
 
 	constructor(socket, name, color, body, direction) {
 		super();
@@ -38,6 +49,8 @@ class Snake extends AbilityManager {
 		// currentDirection is the direction the snake last moved
 		this.currentDirection = null;
 		this.setDirection(direction, true); // [x, y]
+		// speed is how many times per main game tick the snake moves
+		this.speed = 1;
 
 		// custom update functions, which run AFTER default update functions
 		this.customUpdateFunctions = [];
@@ -76,20 +89,21 @@ class Snake extends AbilityManager {
 
 		this.emit("directionChange", newDirection, this.newDirection);
 		
-		const magnitude = Math.abs(newDirection[0] + newDirection[1]);
+		const magnitude = Math.abs(Snake.sumArray(newDirection));
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
 			this.newDirection = newDirection;
 
 		return this.newDirection;
 	}
-	get speed() { return Math.abs(this.newDirection[0] + this.newDirection[1]); }
+	get directionMagnitude() { return Math.abs(Snake.sumArray(this.newDirection)); }
 
 	// returns tileChanges
 	// adds round to current head (when snake turns, we add a curve to one of the corners)
 	// updating is whether we're adding a new head, or updating the head without moving
 	// in which case, we make the head a semi-circle
+	// also updates directionOut and isHead of old head and all previous tiles if necessary
 	updateHeadBorderRadius(updating = true) {
-		this.emit("updateHeadBorderRadius");
+		this.emit("updateHeadBorderRadius", updating);
 
 		// keep track of changed Tiles
 		const tileChanges = [];
@@ -108,7 +122,7 @@ class Snake extends AbilityManager {
 		}
 
 		// only update if snake is moving
-		if (this.speed !== 0) {
+		if (this.directionMagnitude !== 0) {
 			// add rounded corner to old head, depending on current direction and new direction
 			if (this.currentDirection) {
 				// NOTE: y is inverted, so 1 is down, -1 is up
@@ -122,7 +136,20 @@ class Snake extends AbilityManager {
 					deltaDirection[0] == -1 && deltaDirection[1] == -1 ? 100 : 0,
 					deltaDirection[0] == 1 && deltaDirection[1] == -1 ? 100 : 0
 				];
-				tileChanges.push(this.head); // add old head to tileChanges
+				// old head is now not going to be a head, so set head to false
+				this.head.isHead = false;
+				// set directionOut of old head to new direction
+				this.head.directionOut = this.newDirection;
+				// add old head to tileChanges
+				tileChanges.push(this.head); 
+
+				// this isn't in tileChanges, but if the snake just spawned, 
+				// the earlier tiles also won't have a directionOut, so we add it here
+				for (let i = 0; i < this.body.length - 1; i++) {
+					if (Snake.sumArray(this.body[i].directionOut) == 0)
+						this.body[i].directionOut = this.newDirection;
+					else break; // stop when we find a tile with a directionOut
+				}
 			}
 		}
 
@@ -133,29 +160,36 @@ class Snake extends AbilityManager {
 		this.emit("updateTailBorderRadius");
 
 		// don't update if snake is not moving
-		if (this.speed === 0) return [];
+		if (this.directionMagnitude === 0) return [];
 
 		// update new tail border radius
 		const tail = this.tail;
-		let tailDirection = tail.direction;
-		let nextTailDirection = this.body[1].direction;
-		let defaultBorderRadius = tail.borderRadius; // what it defaults to if no rounded corners are needed
+		let tailDirectionIn = tail.directionIn;
+		let tailDirectionOut = tail.directionOut;
+		let defaultBorderRadius = tail.borderRadius; // what it defaults to if no borderRadius is needed
 		// if tailDirection is zero, use the first non-zero direction, from the tail
-		if (tailDirection[0] + tailDirection[1] == 0)
-			for (let i = 1; i < this.body.length; i++)
-				if (this.body[i].direction[0] + this.body[i].direction[1] != 0) {
-					tailDirection = this.body[i].direction;
-					nextTailDirection = this.body[i - 1].direction;
-					// also make default border radius 0
-					defaultBorderRadius = [0, 0, 0, 0];
-					break;
-				}
+		if (Snake.sumArray(tailDirectionIn) == 0 || Snake.sumArray(tailDirectionIn) == 0) {
+			// make default border radius 0 (since snake starts as a circle, this overrides that)
+			defaultBorderRadius = [0, 0, 0, 0];
+			for (let i = 1; i < this.body.length; i++) {
+				// check for directionIn, if not found already
+				if (Snake.sumArray(tailDirectionIn) == 0 && Snake.sumArray(this.body[i].directionIn) != 0)
+					tailDirectionIn = this.body[i].directionIn;
+				// check for directionOut, if not found already
+				if (Snake.sumArray(tailDirectionOut) == 0 && Snake.sumArray(this.body[i].directionOut) != 0)
+					tailDirectionOut = this.body[i].directionOut;
+				// if both are found, break
+				if (Snake.sumArray(tailDirectionIn) != 0 && Snake.sumArray(tailDirectionOut) != 0) break;
+			}
+		}
 		tail.borderRadius = [
-			(tailDirection[0] == 1 && nextTailDirection[1] !== -1) || (tailDirection[1] == 1 && nextTailDirection[0] !== -1) ? 25 : defaultBorderRadius[0],
-			(tailDirection[0] == -1 && nextTailDirection[1] !== -1) || (tailDirection[1] == 1 && nextTailDirection[0] !== 1) ? 25 : defaultBorderRadius[1],
-			(tailDirection[0] == -1 && nextTailDirection[1] !== 1) || (tailDirection[1] == -1 && nextTailDirection[0] !== 1) ? 25 : defaultBorderRadius[2],
-			(tailDirection[0] == 1 && nextTailDirection[1] !== 1) || (tailDirection[1] == -1 && nextTailDirection[0] !== -1) ? 25 : defaultBorderRadius[3]
+			(tailDirectionIn[0] == 1 && tailDirectionOut[1] !== -1) || (tailDirectionIn[1] == 1 && tailDirectionOut[0] !== -1) ? 25 : defaultBorderRadius[0],
+			(tailDirectionIn[0] == -1 && tailDirectionOut[1] !== -1) || (tailDirectionIn[1] == 1 && tailDirectionOut[0] !== 1) ? 25 : defaultBorderRadius[1],
+			(tailDirectionIn[0] == -1 && tailDirectionOut[1] !== 1) || (tailDirectionIn[1] == -1 && tailDirectionOut[0] !== 1) ? 25 : defaultBorderRadius[2],
+			(tailDirectionIn[0] == 1 && tailDirectionOut[1] !== 1) || (tailDirectionIn[1] == -1 && tailDirectionOut[0] !== -1) ? 25 : defaultBorderRadius[3]
 		];
+		// set tail.tail to true
+		tail.isTail = true;
 		// return tileChanges
 		return [tail];
 	}
@@ -167,20 +201,16 @@ class Snake extends AbilityManager {
 		const tileChanges = [];
 
 		// only update if snake is moving
-		if (this.speed !== 0) {
+		if (this.directionMagnitude !== 0) {
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];
-			this.body.push(new Tile(newHeadPos, "snake", this.color, null, [
-				this.newDirection[0] == -1 || this.newDirection[1] == -1 ? 50 : 0,
-				this.newDirection[0] == 1 || this.newDirection[1] == -1 ? 50 : 0,
-				this.newDirection[0] == 1 || this.newDirection[1] == 1 ? 50 : 0,
-				this.newDirection[0] == -1 || this.newDirection[1] == 1 ? 50 : 0
-			], this.newDirection));
-			tileChanges.push(this.head); // add new head to tileChanges
-
+			this.body.push(new Tile(newHeadPos, "snake", this.color, null, null, this.newDirection, null, true, false));
 			// update currentDirection
 			this.currentDirection = this.newDirection;
+			// add new head to tileChanges, after applying border radius
+			// NOTE: we are no longer updating the head, so we pass false to updateHeadBorderRadius
+			tileChanges.push(...this.updateHeadBorderRadius(false)); 
 		}
 
 		// return all TileChanges, and new head position
@@ -199,7 +229,7 @@ class Snake extends AbilityManager {
 		const tileChanges = [];
 
 		// only update if snake is moving
-		if (this.speed !== 0) {
+		if (this.directionMagnitude !== 0) {
 			const oldTailPos = this.body.shift().position;
 			const newTailPos = this.tail.position;
 			// if new tail is not the same as old tail, add old tail to tileChanges
@@ -235,8 +265,8 @@ class Snake extends AbilityManager {
 	// sends game updates to client
 	// should be an array of Tile objects
 	// also sends new head position
-	sendGameUpdate(tileChanges) {
-		if (this.socket) this.socket.emit("gameUpdate", tileChanges, this.head.position);
+	sendGameUpdate(tileChanges, gameTPS) {
+		if (this.socket) this.socket.emit("gameUpdate", tileChanges, this.head.position, this.speed * gameTPS);
 	}
 }
 
