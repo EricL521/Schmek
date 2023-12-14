@@ -3,8 +3,6 @@
 	transition-timing-function: linear;
 	transition-property: left, top;
 
-	width: min-content;
-	height: min-content;
 	margin-left: 50vw;
 	margin-top: 50vh;
 
@@ -25,7 +23,7 @@
 }
 
 .tile-container {
-	position: relative;
+	position: absolute;
 
 	padding: 0;
 	margin: 0;

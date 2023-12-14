@@ -48,7 +48,7 @@ export default function ClientPage() {
 
 	const [currentPage, setPage] = useState('home-screen'); // ['home-screen', 'loading-screen', 'game-screen]
 	// store tileSize as a state variable
-	const [tileSize, setTileSize] = useState(parseFloat(localStorage.getItem('tileSize')) || 50);
+	const [tileSize, setTileSize] = useState(parseFloat(localStorage.getItem('tileSize')) || 100);
 	// updateTileSize also stores tileSize in localStorage
 	const updateTileSize = (tileSize) => { setTileSize(tileSize); localStorage.setItem('tileSize', tileSize); };
 

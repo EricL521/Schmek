@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import style from "./board.module.css";
 
-import BoardRow from "./board-row";
+import BoardTile from "./board-tile";
 
 // contains logic for getting and rendering board from client
 export default function Board({ client, tileSize }) {
@@ -46,7 +46,12 @@ export default function Board({ client, tileSize }) {
 	// save previous tileSize, so we can change tile size with NO transition
 	const previousTileSize = useRef(tileSize);
 	useEffect(() => { previousTileSize.current = tileSize; }, [tileSize]); // NOTE: this runs after everything else
-	const boardTransitionStyle = tileSize == previousTileSize.current? {} : {transition: 'none'};
+	// style for width and height of baord
+	const boardSizeStyle = useMemo(() => ({
+		width: boardState[0].length * tileSize + 'px',
+		height: boardState.length * tileSize + 'px',
+	}), [boardState, tileSize]);
+	const boardTransitionPropertyStyle = tileSize == previousTileSize.current? {} : {transitionProperty: 'none'};
 	// offset board to make headPos the center, NOTE: offset from cropping the board is done seperately
 	const boardPosStyle = useMemo(() => ({
 		left: -1 * (headPos[0] + 0.5) * tileSize + 'px',
@@ -68,7 +73,7 @@ export default function Board({ client, tileSize }) {
 	}, []);
 	// crop boardstate to only include tiles that are on screen, when moving between oldHeadPos and headPos
 	// also get style for offsetting board b/c tiles we cropped off
-	const [croppedBoardState, boardCropOffset, minY] = useMemo(() => {
+	const croppedBoardState = useMemo(() => {
 		// get tileSize in pixels
 		const tileSizePx = tileSize;
 		// get number of tiles that fit on the screen left and right and up and down of head
@@ -96,24 +101,21 @@ export default function Board({ client, tileSize }) {
 		// crop y, then x
 		const croppedBoardState = boardState.slice(minY, maxY + 1)
 			.map(row => row.slice(minX, maxX + 1));
-		// get offset for board
-		const boardCropPadding = {
-			paddingLeft: minX * tileSize + 'px',
-			paddingTop: minY * tileSize + 'px',
-			paddingRight: (boardState[0].length - 1 - maxX) * tileSize + 'px',
-			paddingBottom: (boardState.length - 1 - maxY) * tileSize + 'px',
-		};
 
-		return [croppedBoardState, boardCropPadding, minY];
+		return croppedBoardState;
 	}, [boardState, headPos, boardElement, tileSize, windowSize]);
 	
 	// generate table
-	const rows = useMemo(() => croppedBoardState.map((row, index) =>
-		<BoardRow key={minY + index} board={boardState} row={row} tileSize={tileSize} travelSpeed={travelSpeed} />
-	), [croppedBoardState, minY, tileSize, travelSpeed]);
+	const getTileKey = (tile) => tile.position.join(',');
+	const rows = useMemo(() => croppedBoardState.map((row) =>
+		row.map(tile => tile.type &&
+			<BoardTile key={getTileKey(tile)} tileID={getTileKey(tile)} 
+				board={boardState} tile={tile} tileSize={tileSize} travelSpeed={travelSpeed} />
+		)
+	), [croppedBoardState, tileSize, travelSpeed]);
 
 	return (
-		<div style={{...boardTransitionDuration, ...boardTransitionStyle, ...boardPosStyle, ...boardCropOffset, ...boardBorderStyle}} id={style['board']} ref={boardElement}>
+		<div style={{...boardTransitionDuration, ...boardTransitionPropertyStyle, ...boardPosStyle, ...boardSizeStyle, ...boardBorderStyle}} id={style['board']} ref={boardElement}>
 			{rows}
 		</div>
 	);

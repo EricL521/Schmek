@@ -1,12 +1,13 @@
 // renders a single tile
 // also handles the transition animation
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import style from "./board.module.css";
 
 // travelSpeed is how long it takes the snake to move one grid space IN SECONDS
 // board is used to get the new tail when necessary (see tail animation)
+// also because of how these are rendered, they are essetially being initialized every time
 export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }) {
 	const getTileSizeStyle = useCallback(() => ({
 		width: tileSize + 'px',
@@ -17,14 +18,44 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		backgroundColor: tile.color?? 'transparent',
 		scale: tile.size ?? 1,
 		borderRadius: tile.borderRadius?.map(x => x/100*tileSize + 'px').join(' '),
-		transitionDuration: travelSpeed + 's',
-		transitionTimingFunction: 'linear',
-		transitionProperty: (tile.isHead)? 'none' : 'border-radius'
+		... (
+			(!tile.animated && (tile.isHead || tile.isTail))?
+			{ transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
+				+ -tile.directionIn[1] * 100 + '%)' }
+			: {}
+		)
 	}), [tileSize, travelSpeed]);
+	const getOldTileStyle = useCallback((oldTile, currentTile) => ({
+		... getTileStyle(oldTile),
+		... (
+			(!currentTile.animated && (currentTile.isHead || currentTile.isTail))?
+			{ transform: 'translate(' + -currentTile.directionIn[0] * 100 + '%, ' 
+				+ -currentTile.directionIn[1] * 100 + '%)' }
+			: {}
+		)
+	}), [getTileStyle]);
 	// tileParentStyle is the style of the parent div
-	const getTileContainerStyle = useCallback(() => ({
-		... getTileSizeStyle()
-	}), [getTileSizeStyle]);
+	const getTileContainerStyle = useCallback((tile) => ({
+		... getTileSizeStyle(),
+		// get position of tile
+		left: tile.position[0] * tileSize + 'px',
+		top: tile.position[1] * tileSize + 'px',
+	}), [getTileSizeStyle, tileSize]);
+
+	// returns the initial state of tile before animations
+	const initialTileStyle = useMemo(() => {
+		if (tile.animated) return getTileStyle(tile);
+		if (tile.isHead) return getTileStyle(tile);
+		if (tile.oldTile.type && tile.isTail) {
+			// get style of old tail
+			const oldTail = board[tile.position[1] - tile.directionIn[1]]
+				[tile.position[0] - tile.directionIn[0]].oldTile;
+			return getOldTileStyle(oldTail, tile);
+		}
+		// otherwise, just return old tile style if it exists
+		if (tile.oldTile.type) return getOldTileStyle(tile.oldTile, tile);
+		return getTileStyle(tile);
+	}, [tile, board, getTileStyle, getOldTileStyle]);
 
 	// start necessary transitions, when tile has changed
 	const tileElement = useRef(null);
@@ -33,73 +64,137 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	// calculate size of tile clip
 	const tileClipSizeStyle = useMemo(() => ({
 		... (
-			!tile.isHead? {}
+			!(tile.isHead || tile.isTail)? {} // if tile is not head or tail, don't extend clip box
 			: tile.directionIn[0] == 1? {paddingLeft: tileSize + 'px', marginLeft: -tileSize + 'px'}
 			: tile.directionIn[0] == -1? {paddingRight: tileSize + 'px'}
 			: tile.directionIn[1] == 1? {paddingTop: tileSize + 'px', marginTop: -tileSize + 'px'}
 			: tile.directionIn[1] == -1? {paddingBottom: tileSize + 'px'}
 			: {}
-		),
-	}), [tileSize, tile]);
-	// calculate size of old tile clip
-	const oldTileClipSizeStyle = useMemo(() => ({
-		... (
-			!tile.oldTile?.isTail? {}
-			: tile.oldTile.directionOut[0] == 1? {paddingRight: tileSize + 'px'}
-			: tile.oldTile.directionOut[0] == -1? {paddingLeft: tileSize + 'px', marginLeft: -tileSize + 'px'}
-			: tile.oldTile.directionOut[1] == 1? {paddingBottom: tileSize + 'px'}
-			: tile.oldTile.directionOut[1] == -1? {paddingTop: tileSize + 'px', marginTop: -tileSize + 'px'}
-			: {}
 		)
 	}), [tileSize, tile]);
-	// run following before render:
-	useMemo(() => {
-		const oldTile = tile.oldTile;
-
-		// if old tile was a tail, animate it out, and animate style to new tail
-		if (oldTile?.isTail) {
-			// get the new tail
-			const newTail = board[oldTile.position[1] + oldTile.directionOut[1]]
-				[oldTile.position[0] + oldTile.directionOut[0]];
-			// animate old tile out
-			oldTileElement.current?.animate([
-				{
-					... getTileStyle(oldTile),
-					visibility: 'visible', // make tile appear before animation
-					transform: 'translate(0, 0)'
-				},
-				{
-					... getTileStyle(newTail),
-					visibility: 'hidden', // make tile disappear after animation
-					transform: 'translate(' + oldTile.directionOut[0] * 100 + '%, ' 
-						+ oldTile.directionOut[1] * 100 + '%)'
-				}
-			], {
-				duration: travelSpeed * 1000,
-				easing: 'linear',
-				fill: 'forwards'
-			}).addEventListener('finish', () => tile.animated = true);	
-		}
-
-		// if tile is a head, animate it in, and animate tile clip properly
+	// get initial borderradius of tile clip
+	const tileClipInitialBorderRadiusStyle = useMemo(() => {
+		// if tile is head, get border radius of old head tile
 		if (tile.isHead) {
-			// animate transform and also width or height, depending on direction
-			tileElement.current?.animate([
-				{ transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
-					+ -tile.directionIn[1] * 100 + '%)'},
-				{ transform: 'translate(0, 0)' }
-			], {
-				duration: travelSpeed * 1000,
-				easing: 'linear',
-				fill: 'forwards'
-			}).addEventListener('finish', () => tile.animated = true);	
+			const oldHead = board[tile.position[1] - tile.directionIn[1]]
+				[tile.position[0] - tile.directionIn[0]].oldTile;
+			if (oldHead) return {
+				borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ')
+			}
+		}
+		// otherwise, initial clipping border radius is 0
+		return {};
+	}, [board, tile]);
+	// run following after render:
+	useEffect(() => {
+		if (tile.animated) return;
 
-			// animate tile clipping to mimic oldHead tile
+		// NOTE for all animations:
+		// we set style to the final state before animation, so that we can use fill: 'backwards'
+		// we need to do this so it can be overriden later (for some reason you can't override fill: 'forwards')
+
+		// animate old tile to new if new tile is tail
+		if (tile.isTail) {
+			tile.animated = true;
+
+			// get the old tail
+			const oldTail = board[tile.position[1] - tile.directionIn[1]]
+				[tile.position[0] - tile.directionIn[0]].oldTile;
+			// animate old tile only if there was an old tail
+			if (oldTail) {
+				// animate new tile
+				Object.assign(tileElement.current.style, {
+					... getTileStyle(tile),
+					transform: 'translate(0, 0)'
+				});
+				tileElement.current.animate([
+					{
+						... getTileStyle(oldTail),
+						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
+						+ -tile.directionIn[1] * 100 + '%)'
+					},
+					{
+						... getTileStyle(tile),
+						transform: 'translate(0, 0)'
+					}
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				});
+
+				// animate oldTile border radius to the tail's
+				Object.assign(oldTileElement.current.style, {
+					borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ')
+				});
+				oldTileElement.current.animate([
+					{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
+					{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				});
+
+				// animate clipping size to match tail as it moves
+				Object.assign(tileElementClip.current.style, { padding: 0, margin: 0 });
+				tileElementClip.current.animate([
+					{ ...tileClipSizeStyle },
+					{ padding: 0 }
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				});
+			}
+		}
+		// if tile is a head, animate it in, and animate tile clip properly
+		else if (tile.isHead) {
+			tile.animated = true;
+
+			// current tile at the oldHead position
 			const oldHead = board[tile.position[1] - tile.directionIn[1]]
 				[tile.position[0] - tile.directionIn[0]];
-			tileElementClip.current?.animate([
-				{ ...tileClipSizeStyle, borderRadius: (oldHead.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
-				{ ...tileClipSizeStyle, borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+			if (oldHead) {
+				// animate transform and also width or height, depending on direction
+				Object.assign(tileElement.current.style, {
+					transform: 'translate(0, 0)'
+				});
+				tileElement.current.animate([
+					{
+						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
+							+ -tile.directionIn[1] * 100 + '%)'
+					},
+					{ 
+						transform: 'translate(0, 0)' 
+					}
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				});
+
+				// animate tile clipping to mimic oldHead tile's border radius animation
+				tileElementClip.current?.animate([
+					{ borderRadius: (oldHead.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
+					{ borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				});
+			}
+		}
+		// otherwise, just animate from old tile to new tile
+		else if (tile.oldTile.type) {
+			tile.animated = true;
+
+			Object.assign(tileElement.current.style, {
+				... getTileStyle(tile),
+			});
+			tileElement.current.animate([
+				{ ... getOldTileStyle(tile.oldTile, tile) },
+				{ ... getTileStyle(tile) }
 			], {
 				duration: travelSpeed * 1000,
 				easing: 'linear',
@@ -109,19 +204,19 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	}, [tile]);
 
 	return (
-		<div id={tileID} style={getTileContainerStyle()} className={style['tile-container']}>
-			{/* Check if tile is tail to prepare to animate oldTile next frame, or show apple if it is one */}
-			{ (!tile.animated && tile.oldTile?.isTail || tile.isTail || 
-				(tile.oldTile?.type === "food" && tile.type !== "food"))?
-				<div className={style['tile-clip']} style={oldTileClipSizeStyle}>
+		<div id={tile.animated + ' ' + tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>
+			{/* Keep showing old tile if the head ate an apple, or if the tail is moving in */}
+			{ (!tile.animated && (tile.oldTile.type && tile.isTail) || (tile.oldTile.type === "food" && tile.isHead))?
+				<div className={style['tile-clip']} id="old-tile">
 					<div ref={oldTileElement} className={style['tile']} 
-						style={tile.oldTile?.isTail || tile.oldTile?.type == "food"? 
-						getTileStyle(tile.oldTile): {display: 'none'}} />
+						style={getTileStyle(tile.oldTile)} />
 				</div>
 			: null }
 			{/* render tile (and clip if necessary) */}
-			<div ref={tileElementClip} className={style['tile-clip']}>
-				<div ref={tileElement} className={style['tile']} style={getTileStyle(tile)} />
+			<div ref={tileElementClip} className={style['tile-clip']} 
+				style={{...tileClipSizeStyle, ...tileClipInitialBorderRadiusStyle}}>
+				<div ref={tileElement} className={style['tile']} 
+					style={initialTileStyle} />
 			</div>
 		</div>
 	);

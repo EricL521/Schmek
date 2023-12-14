@@ -143,7 +143,7 @@ class Client extends KeybindManager {
 			this.emit("travelSpeed", this.travelSpeed);
 
 			// initialize board state and head position
-			this.boardState = this.genBoard(dimensions, tiles);
+			this.genBoard(dimensions, tiles);
 			this.oldHeadPos = headPos;
 			this.headPos = headPos;
 
@@ -153,20 +153,15 @@ class Client extends KeybindManager {
 	} 
 	// generates board based on dimensions and tiles when joining game
 	genBoard(dimensions, tiles) {
-		const boardState = [];
+		this.boardState = [];
 		for (let y = 0; y < dimensions[1]; y++) {
 			const row = [];
 			for (let x = 0; x < dimensions[0]; x++) {
 				row.push(new Tile([x, y]));
 			}
-			boardState.push(row);
+			this.boardState.push(row);
 		}
-		for (const tile of tiles) {
-			const [x, y] = tile.position;
-			boardState[y][x] = tile;
-		}
-		
-		return boardState;
+		this.updateBoard(tiles);
 	}
 
 	// applies tile changes to board state
@@ -175,6 +170,7 @@ class Client extends KeybindManager {
 		for (const tile of tileChanges) {
 			const [x, y] = tile.position;
 			tile.oldTile = this.boardState[y][x];
+			tile.animated = false;
 			this.boardState[y][x] = tile;
 		}
 	}
