@@ -54,6 +54,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		}
 		// otherwise, just return old tile style if it exists
 		if (tile.oldTile.type) return getOldTileStyle(tile.oldTile, tile);
+		// if old tile doesn't exist, then just return tile style
 		return getTileStyle(tile);
 	}, [tile, board, getTileStyle, getOldTileStyle]);
 
@@ -64,12 +65,13 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	// calculate size of tile clip
 	const tileClipSizeStyle = useMemo(() => ({
 		... (
-			!(tile.isHead || tile.isTail)? {} // if tile is not head or tail, don't extend clip box
+			// if tile is not head or tail, don't extend clip box
+			!(tile.isHead || tile.isTail)? { padding: 0, margin: 0 }
 			: tile.directionIn[0] == 1? {paddingLeft: tileSize + 'px', marginLeft: -tileSize + 'px'}
 			: tile.directionIn[0] == -1? {paddingRight: tileSize + 'px'}
 			: tile.directionIn[1] == 1? {paddingTop: tileSize + 'px', marginTop: -tileSize + 'px'}
 			: tile.directionIn[1] == -1? {paddingBottom: tileSize + 'px'}
-			: {}
+			: { padding: 0, margin: 0 }
 		)
 	}), [tileSize, tile]);
 	// get initial borderradius of tile clip
@@ -83,15 +85,15 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			}
 		}
 		// otherwise, initial clipping border radius is 0
-		return {};
-	}, [board, tile]);
+		return { borderRadius: 0 };
+	}, [board, tile, tileSize]);
 	// run following after render:
 	useEffect(() => {
 		if (tile.animated) return;
 
-		// NOTE for all animations:
-		// we set style to the final state before animation, so that we can use fill: 'backwards'
-		// we need to do this so it can be overriden later (for some reason you can't override fill: 'forwards')
+		// note for all animations:
+		// style is set to the final state before animation, so that fill: 'backwards' can be used
+		// this needs to be done so it can be overriden later (for some reason you can't override fill: 'forwards')
 
 		// animate old tile to new if new tile is tail
 		if (tile.isTail) {
@@ -124,28 +126,17 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 				});
 
 				// animate oldTile border radius to the tail's
-				Object.assign(oldTileElement.current.style, {
-					borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ')
-				});
-				oldTileElement.current.animate([
-					{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
-					{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
-				], {
-					duration: travelSpeed * 1000,
-					easing: 'linear',
-					fill: 'backwards'
-				});
-
-				// animate clipping size to match tail as it moves
-				Object.assign(tileElementClip.current.style, { padding: 0, margin: 0 });
-				tileElementClip.current.animate([
-					{ ...tileClipSizeStyle },
-					{ padding: 0 }
-				], {
-					duration: travelSpeed * 1000,
-					easing: 'linear',
-					fill: 'backwards'
-				});
+				if (tile.oldTile?.type) {
+					oldTileElement.current.style.borderRadius = tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ');
+					oldTileElement.current.animate([
+						{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
+						{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+					], {
+						duration: travelSpeed * 1000,
+						easing: 'linear',
+						fill: 'backwards'
+					});
+				}
 			}
 		}
 		// if tile is a head, animate it in, and animate tile clip properly
@@ -175,7 +166,8 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 				});
 
 				// animate tile clipping to mimic oldHead tile's border radius animation
-				tileElementClip.current?.animate([
+				tileElementClip.current.style.borderRadius = oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ');
+				tileElementClip.current.animate([
 					{ borderRadius: (oldHead.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
 					{ borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
 				], {
@@ -204,9 +196,9 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	}, [tile]);
 
 	return (
-		<div id={tile.animated + ' ' + tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>
+		<div id={tile.isHead + ' ' + tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>
 			{/* Keep showing old tile if the head ate an apple, or if the tail is moving in */}
-			{ (!tile.animated && (tile.oldTile.type && tile.isTail) || (tile.oldTile.type === "food" && tile.isHead))?
+			{ (!tile.animated && ((tile.oldTile.type && tile.isTail) || (tile.oldTile.type === "food" && tile.isHead)))?
 				<div className={style['tile-clip']} id="old-tile">
 					<div ref={oldTileElement} className={style['tile']} 
 						style={getTileStyle(tile.oldTile)} />
