@@ -22,7 +22,7 @@ export default function Board({ client, tileSize }) {
 		return () => {
 			client.removeListener("gameUpdate", gameUpdateListener);
 			client.removeListener("initialState", gameUpdateListener);
-		}
+		};
 	}, [client]);
 	// initialize board state and head position to client's
 	const [boardState, setBoardState] = useState(client?.boardState);
@@ -46,7 +46,7 @@ export default function Board({ client, tileSize }) {
 	// save previous tileSize, so we can change tile size with NO transition
 	const previousTileSize = useRef(tileSize);
 	useEffect(() => { previousTileSize.current = tileSize; }, [tileSize]); // NOTE: this runs after everything else
-	// style for width and height of baord
+	// style for width and height of board
 	const boardSizeStyle = useMemo(() => ({
 		width: boardState[0].length * tileSize + 'px',
 		height: boardState.length * tileSize + 'px',

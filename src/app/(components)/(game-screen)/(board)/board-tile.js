@@ -13,8 +13,9 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		width: tileSize + 'px',
 		height: tileSize + 'px',
 	}), [tileSize]);
-	// tileStyle includes tileSizeStyle and adds a couple more things
+	// these styles are the styles before any animations
 	const getTileStyle = useCallback((tile) => ({
+		transition: 'none',
 		backgroundColor: tile.color?? 'transparent',
 		scale: tile.size ?? 1,
 		borderRadius: tile.borderRadius?.map(x => x/100*tileSize + 'px').join(' '),
@@ -34,7 +35,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			: {}
 		)
 	}), [getTileStyle]);
-	// tileParentStyle is the style of the parent div
+	// tileContainerStyle is the style of the div of the entire tile (not the tileClip)
 	const getTileContainerStyle = useCallback((tile) => ({
 		... getTileSizeStyle(),
 		// get position of tile
@@ -58,11 +59,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		return getTileStyle(tile);
 	}, [tile, board, getTileStyle, getOldTileStyle]);
 
-	// start necessary transitions, when tile has changed
-	const tileElement = useRef(null);
-	const tileElementClip = useRef(null);
-	const oldTileElement = useRef(null);
-	// calculate size of tile clip
+	// calculate size of tile clip (extra padding)
 	const tileClipSizeStyle = useMemo(() => ({
 		... (
 			// if tile is not head or tail, don't extend clip box
@@ -87,6 +84,24 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		// otherwise, initial clipping border radius is 0
 		return { borderRadius: 0 };
 	}, [board, tile, tileSize]);
+	// returns initial state of tile clip before animations
+	const tileClipInitialStyle = useMemo(() => ({
+		transition: 'none',
+		...tileClipSizeStyle,
+		...tileClipInitialBorderRadiusStyle
+	}), [tileClipSizeStyle, tileClipInitialBorderRadiusStyle]);
+
+	// start necessary transitions, when tile has changed
+	const tileElement = useRef(null);
+	const tileElementClip = useRef(null);
+	const oldTileElement = useRef(null);
+
+	// run following before render:
+	useMemo(() => {
+		// basically, if the elements already exist, then just set html again
+		if (tileElement.current) Object.assign(initialTileStyle);
+		if (tileElementClip.current) Object.assign(tileClipInitialStyle);
+	}, [tile]);
 	// run following after render:
 	useEffect(() => {
 		if (tile.animated) return;
@@ -110,11 +125,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 					transform: 'translate(0, 0)'
 				});
 				tileElement.current.animate([
-					{
-						... getTileStyle(oldTail),
-						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
-						+ -tile.directionIn[1] * 100 + '%)'
-					},
+					initialTileStyle,
 					{
 						... getTileStyle(tile),
 						transform: 'translate(0, 0)'
@@ -148,9 +159,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 				[tile.position[0] - tile.directionIn[0]];
 			if (oldHead) {
 				// animate transform and also width or height, depending on direction
-				Object.assign(tileElement.current.style, {
-					transform: 'translate(0, 0)'
-				});
+				tileElement.current.style.transform = 'translate(0, 0)';
 				tileElement.current.animate([
 					{
 						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
@@ -181,12 +190,10 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		else if (tile.oldTile.type) {
 			tile.animated = true;
 
-			Object.assign(tileElement.current.style, {
-				... getTileStyle(tile),
-			});
+			Object.assign(tileElement.current.style, getTileStyle(tile));
 			tileElement.current.animate([
-				{ ... getOldTileStyle(tile.oldTile, tile) },
-				{ ... getTileStyle(tile) }
+				getOldTileStyle(tile.oldTile, tile),
+				getTileStyle(tile)
 			], {
 				duration: travelSpeed * 1000,
 				easing: 'linear',
@@ -206,7 +213,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			: null }
 			{/* render tile (and clip if necessary) */}
 			<div ref={tileElementClip} className={style['tile-clip']} 
-				style={{...tileClipSizeStyle, ...tileClipInitialBorderRadiusStyle}}>
+				style={tileClipInitialStyle}>
 				<div ref={tileElement} className={style['tile']} 
 					style={initialTileStyle} />
 			</div>
