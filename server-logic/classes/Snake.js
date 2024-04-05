@@ -19,14 +19,14 @@ class Snake extends AbilityManager {
 		(_, snake, newHeadTile) => { if (newHeadTile.positionString === snake.tail.positionString) return snake.updateTail(false); },
 		(game, snake, newHeadTile) => { 
 			if (newHeadTile.type === "food") { 
+				const tileChanges = [];
 				snake.emit("grow"); // used in abilityManager to determine giving abilities
-				game.generateFood(); 
+				tileChanges.push(...game.generateFood()); 
 				// if snake tail is still circular (from when snake first spawned), update it
 				if (snake.tail.borderRadius[0] == 50 && snake.tail.borderRadius[1] == 50 && 
 					snake.tail.borderRadius[2] == 50 && snake.tail.borderRadius[3] == 50)
-					return snake.updateTailBorderRadius(); 
-				// otherwise, don't update tail
-				return [];
+					tileChanges.push(...snake.updateTailBorderRadius()); 
+				return tileChanges;
 			}
 		},
 	];

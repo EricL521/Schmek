@@ -18,7 +18,7 @@ class Game {
 		this.tps = 0;
 		
 		// generate food
-		this.generateFood(numFood, true);
+		this.generateFood(numFood, true, true);
 	}
 	get tilesArray() { return Array.from(this.tiles.values()); }
 	initializeTiles(dimensions) {
@@ -232,9 +232,10 @@ class Game {
 		return x >= 0 && x < this.dimensions[0] && y >= 0 && y < this.dimensions[1];
 	}
 
-	// generates numFood food tiles and updates board and other snakes
+	// generates numFood food tiles
 	// log is whether to log progress to console
-	generateFood(numFood = 1, log = false) {
+	// updatePlayers is whether to update players after generating food
+	generateFood(numFood = 1, log = false, updatePlayers = false) {
 		const tileChanges = [];
 		if (log) console.log("Generating Food...");
 		this.getRandomEmptyPos(numFood).forEach((pos, i) => {
@@ -246,9 +247,12 @@ class Game {
 			tileChanges.push(food);
 		});
 		if (log) console.log(); // move cursor to next line
-		// update board and other snakes
-		this.updateBoard(tileChanges);
-		this.updatePlayers(tileChanges);
+		// update board and other snakes if updatePlayers is true
+		if (updatePlayers) {
+			this.updateBoard(tileChanges);
+			this.updatePlayers(tileChanges);
+		}
+		return tileChanges;
 	}
 	// returns a list of num empty tile positions
 	getRandomEmptyPos(num) {
