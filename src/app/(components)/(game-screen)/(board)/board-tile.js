@@ -61,14 +61,15 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 
 	// calculate size of tile clip (extra padding)
 	const tileClipSizeStyle = useMemo(() => ({
+		padding: 0, margin: 0, 
 		... (
 			// if tile is not head or tail, don't extend clip box
-			!(tile.isHead || tile.isTail)? { padding: 0, margin: 0 }
+			!(tile.isHead || tile.isTail)? { }
 			: tile.directionIn[0] == 1? {paddingLeft: tileSize + 'px', marginLeft: -tileSize + 'px'}
 			: tile.directionIn[0] == -1? {paddingRight: tileSize + 'px'}
 			: tile.directionIn[1] == 1? {paddingTop: tileSize + 'px', marginTop: -tileSize + 'px'}
 			: tile.directionIn[1] == -1? {paddingBottom: tileSize + 'px'}
-			: { padding: 0, margin: 0 }
+			: { }
 		)
 	}), [tileSize, tile]);
 	// get initial borderradius of tile clip
@@ -99,12 +100,18 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	// run following before render:
 	useMemo(() => {
 		// basically, if the elements already exist, then just set html again
-		if (tileElement.current) Object.assign(initialTileStyle);
-		if (tileElementClip.current) Object.assign(tileClipInitialStyle);
+		if (tileElement.current) Object.assign(tileElement.current.style, initialTileStyle);
+		if (tileElementClip.current) Object.assign(tileElementClip.current.style, tileClipInitialStyle);
 	}, [tile]);
+	// store all animations in a ref
+	const animations = useRef([]);
 	// run following after render:
 	useEffect(() => {
 		if (tile.animated) return;
+
+		// reset animations
+		// NOTE: old animations should be handled by remove function of this effect
+		animations.current = [];
 
 		// note for all animations:
 		// style is set to the final state before animation, so that fill: 'backwards' can be used
@@ -112,55 +119,45 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 
 		// animate old tile to new if new tile is tail
 		if (tile.isTail) {
-			tile.animated = true;
+			// animate new tile
+			animations.current.push(tileElement.current.animate([
+				initialTileStyle,
+				{
+					... getTileStyle(tile),
+					transform: 'translate(0, 0)'
+				}
+			], {
+				duration: travelSpeed * 1000,
+				easing: 'linear',
+				fill: 'both'
+			}));
 
 			// get the old tail
 			const oldTail = board[tile.position[1] - tile.directionIn[1]]
 				[tile.position[0] - tile.directionIn[0]].oldTile;
 			// animate old tile only if there was an old tail
 			if (oldTail) {
-				// animate new tile
-				Object.assign(tileElement.current.style, {
-					... getTileStyle(tile),
-					transform: 'translate(0, 0)'
-				});
-				tileElement.current.animate([
-					initialTileStyle,
-					{
-						... getTileStyle(tile),
-						transform: 'translate(0, 0)'
-					}
-				], {
-					duration: travelSpeed * 1000,
-					easing: 'linear',
-					fill: 'backwards'
-				});
-
 				// animate oldTile border radius to the tail's
 				if (tile.oldTile?.type) {
-					oldTileElement.current.style.borderRadius = tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ');
-					oldTileElement.current.animate([
+					animations.current.push(oldTileElement.current.animate([
 						{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
 						{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
 					], {
 						duration: travelSpeed * 1000,
 						easing: 'linear',
-						fill: 'backwards'
-					});
+						fill: 'both'
+					}));
 				}
 			}
 		}
 		// if tile is a head, animate it in, and animate tile clip properly
 		else if (tile.isHead) {
-			tile.animated = true;
-
 			// current tile at the oldHead position
 			const oldHead = board[tile.position[1] - tile.directionIn[1]]
 				[tile.position[0] - tile.directionIn[0]];
 			if (oldHead) {
 				// animate transform and also width or height, depending on direction
-				tileElement.current.style.transform = 'translate(0, 0)';
-				tileElement.current.animate([
+				animations.current.push(tileElement.current.animate([
 					{
 						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
 							+ -tile.directionIn[1] * 100 + '%)'
@@ -170,42 +167,69 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 					}
 				], {
 					duration: travelSpeed * 1000,
-					easing: 'linear',
-					fill: 'backwards'
-				});
+					easing: 'ease',
+					fill: 'both'
+				}));
 
 				// animate tile clipping to mimic oldHead tile's border radius animation
-				tileElementClip.current.style.borderRadius = oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ');
-				tileElementClip.current.animate([
-					{ borderRadius: (oldHead.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
+				animations.current.push(tileElementClip.current.animate([
+					tileClipInitialBorderRadiusStyle,
 					{ borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
 				], {
 					duration: travelSpeed * 1000,
-					easing: 'linear',
-					fill: 'backwards'
-				});
+					easing: 'ease',
+					fill: 'both'
+				}));
 			}
 		}
 		// otherwise, just animate from old tile to new tile
 		else if (tile.oldTile.type) {
-			tile.animated = true;
-
-			Object.assign(tileElement.current.style, getTileStyle(tile));
-			tileElement.current.animate([
+			animations.current.push(tileElement.current.animate([
 				getOldTileStyle(tile.oldTile, tile),
 				getTileStyle(tile)
 			], {
 				duration: travelSpeed * 1000,
-				easing: 'linear',
-				fill: 'backwards'
-			});
+				easing: 'ease',
+				fill: 'both'
+			}));
 		}
+
+		// when we've finished animating, set animated to true
+		for (const animation of animations.current)	
+			animation.onfinish = () => tile.animated = true;
+
+		// every quarter of the way through all animations, 
+		// adjust them so they will finish at the correct time
+		const intervals = animations.current.map((animation) => {
+			const currentTime = performance.now();
+			return setInterval(() => {
+				const timeRemaining = travelSpeed * 1000 - (performance.now() - currentTime);
+				const newPlaybackRate = (travelSpeed * 1000 - animation.currentTime) / timeRemaining;
+				try {
+					if (newPlaybackRate > 0) animation.playbackRate = newPlaybackRate;
+				}
+				catch (e) { console.log(newPlaybackRate); console.error(e); }
+			}, travelSpeed * 1000 / 4);
+		});
+
+		// when new tile is starting to be rendered, force finish all animations
+		// also cancel intervals
+		return () => {
+			for (const animation of animations.current) {
+				try {
+					if (animation.pending) animation.finish();
+				}
+				// I believe this happens when the element the animation was on is removed?
+				catch (e) { /* console.error(e); */ }
+			}
+			for (const interval of intervals) clearInterval(interval);
+		};
 	}, [tile]);
 
 	return (
-		<div id={tile.isHead + ' ' + tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>
-			{/* Keep showing old tile if the head ate an apple, or if the tail is moving in */}
-			{ (!tile.animated && ((tile.oldTile.type && tile.isTail) || (tile.oldTile.type === "food" && tile.isHead)))?
+		<div id={tile.animated + ' ' + tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>
+			{/* Keep showing old tile if the head moved into something, or if the tail is moving in */}
+			{ (!tile.animated && ((tile.oldTile.type && tile.isTail) || tile.isHead))?
 				<div className={style['tile-clip']} id="old-tile">
 					<div ref={oldTileElement} className={style['tile']} 
 						style={getTileStyle(tile.oldTile)} />

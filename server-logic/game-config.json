@@ -1,6 +1,6 @@
 {
 	"dimensions": [100, 100],
 	"numFood": 500,
-	"tps": 2,
-	"playerTogglePauseGameEnabled": true
+	"tps": 3,
+	"playerTogglePauseGameEnabled": false
 }

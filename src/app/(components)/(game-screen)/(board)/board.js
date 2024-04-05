@@ -11,9 +11,10 @@ export default function Board({ client, tileSize }) {
 	// add listeners for boardstate and headpos to client
 	useEffect(() => {
 		// add listener for when board is updated or initialized
-		const gameUpdateListener = (boardState, headPos) => {
+		const gameUpdateListener = (boardState, headPos, oldHeadPos) => {
 			if (boardState) setBoardState([... boardState]);
 			if (headPos) setHeadPos([... headPos]);
+			if (oldHeadPos) setOldHeadPos([... oldHeadPos]);
 		};
 		client.on("gameUpdate", gameUpdateListener);
 		client.on("initialState", gameUpdateListener);
@@ -27,6 +28,7 @@ export default function Board({ client, tileSize }) {
 	// initialize board state and head position to client's
 	const [boardState, setBoardState] = useState(client?.boardState);
 	const [headPos, setHeadPos] = useState(client?.headPos);
+	const [oldHeadPos, setOldHeadPos] = useState(client?.oldHeadPos);
 
 	// add listeners for travelSpeed
 	useEffect(() => {
@@ -38,7 +40,7 @@ export default function Board({ client, tileSize }) {
 	const [travelSpeed, setTravelSpeed] = useState(client?.travelSpeed);
 	// also calculate transition duration
 	const boardTransitionDuration = useMemo(() => ({
-		transitionDuration: travelSpeed + 's'
+		transitionDuration: 2 * travelSpeed + 's'
 	}), [travelSpeed]);
 
 	const boardElement = useRef(null);
@@ -54,8 +56,8 @@ export default function Board({ client, tileSize }) {
 	const boardTransitionPropertyStyle = tileSize == previousTileSize.current? {} : {transitionProperty: 'none'};
 	// offset board to make headPos the center, NOTE: offset from cropping the board is done seperately
 	const boardPosStyle = useMemo(() => ({
-		left: -1 * (headPos[0] + 0.5) * tileSize + 'px',
-		top: -1 * (headPos[1] + 0.5) * tileSize + 'px',
+		left: -1 * (headPos[0] + 0.5 + 0.25 * (headPos[0] - oldHeadPos[0])) * tileSize + 'px',
+		top: -1 * (headPos[1] + 0.5 + 0.25 * (headPos[1] - oldHeadPos[1])) * tileSize + 'px',
 	}), [headPos, tileSize]);
 	const boardBorderStyle = useMemo(() => ({
 		boxShadow: '0 0 ' + 5*tileSize + 'px ' + 5*tileSize + 'px var(--secondary-color)',
@@ -106,7 +108,7 @@ export default function Board({ client, tileSize }) {
 	}, [boardState, headPos, boardElement, tileSize, windowSize]);
 	
 	// generate table
-	const getTileKey = (tile) => tile.position.join(',');
+	const getTileKey = (tile) => tile.position.join(',') + ' ' + Math.random(); // temporary fix to force new elements
 	const rows = useMemo(() => croppedBoardState.map((row) =>
 		row.map(tile => tile.type &&
 			<BoardTile key={getTileKey(tile)} tileID={getTileKey(tile)} 

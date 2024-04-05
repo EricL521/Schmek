@@ -12,6 +12,8 @@ class Client extends KeybindManager {
 		this.initializeSocket();
 
 		this.boardState;
+		this.olderHeadPos;
+		this.oldHeadPos;
 		this.headPos;
 		this.travelSpeed = 0; // seconds per box traveled of snake
 
@@ -33,7 +35,8 @@ class Client extends KeybindManager {
 		this.socket.on("gameUpdate", (tileChanges, headPos, travelTPS) => {
 			// update board state & head position
 			this.updateBoard(tileChanges);
-			const oldHeadPos = this.headPos;
+			this.olderHeadPos = this.oldHeadPos;
+			this.oldHeadPos = this.headPos;
 			this.headPos = headPos?? this.headPos;
 
 			// update and emit travelSpeed
@@ -45,9 +48,7 @@ class Client extends KeybindManager {
 					this.emit("travelSpeed", this.travelSpeed);
 			}
 
-			// emit game update if there are tile changes or head position changes
-			if ((tileChanges && tileChanges.length > 0) || (this.headPos[0] != oldHeadPos[0] || this.headPos[1] != oldHeadPos[1]))
-				this.emit("gameUpdate", this.boardState, this.headPos);
+			this.emit("gameUpdate", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 		});
 
 		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
@@ -144,10 +145,11 @@ class Client extends KeybindManager {
 
 			// initialize board state and head position
 			this.genBoard(dimensions, tiles);
+			this.olderHeadPos = headPos;
 			this.oldHeadPos = headPos;
 			this.headPos = headPos;
 
-			this.emit("initialState", this.boardState, this.headPos);
+			this.emit("initialState", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 			this.emit("boardInitialized");
 		});
 	} 
