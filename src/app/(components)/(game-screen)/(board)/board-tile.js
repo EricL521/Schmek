@@ -216,11 +216,11 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		// also cancel intervals
 		return () => {
 			for (const animation of animations.current) {
-				try {
-					if (animation.pending) animation.finish();
+				if (animation.pending) {
+					// sometimes, the duration is infinite for some reason, so we need to set it to 1
+					animation.effect.updateTiming({ duration: 1 });
+					animation.finish();
 				}
-				// I believe this happens when the element the animation was on is removed?
-				catch (e) { /* console.error(e); */ }
 			}
 			for (const interval of intervals) clearInterval(interval);
 		};
