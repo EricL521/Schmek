@@ -109,6 +109,11 @@ export default function Board({ client, tileSize }) {
 	
 	// generate table
 	const getTileKey = (tile) => tile.position.join(',') + ' ' + Math.random(); // temporary fix to force new elements
+	// NOTE: forcing new elements might be a permanent thing; only a few tiles would actually be reused
+	// and it results in buggy behavior with tiles reverting to the oldTile for some reason
+	// this is because tile.animated isn't set until the animation finishes, which runs after 
+	// the initial tile is set, but before the useEffect animation, which means it gets stuck on the oldTile
+	// without animating to the new one, but only sometimes
 	const rows = useMemo(() => croppedBoardState.map((row) =>
 		row.map(tile => tile.type &&
 			<BoardTile key={getTileKey(tile)} tileID={getTileKey(tile)} 
