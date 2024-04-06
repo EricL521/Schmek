@@ -166,6 +166,7 @@ class Game {
 			const newHeadTile = this.tiles.get(Tile.positionToString(newHeadPos));
 
 			const updateFunctions = Snake.defaultUpdateFunctions.concat(snake.customUpdateFunctions);
+			// killSnake is only true if every function returns true
 			const killSnake = updateFunctions.every(updateFunction => {
 				const result = updateFunction(this, snake, newHeadTile);
 				if (result) { // if result is an array, add result to tileChanges and stop executing functions

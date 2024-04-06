@@ -99,17 +99,17 @@ class Snake extends AbilityManager {
 
 	// returns tileChanges
 	// adds round to current head (when snake turns, we add a curve to one of the corners)
-	// updating is whether we're adding a new head, or updating the head without moving
+	// oldHead is whether we're updating the old head, or updating the newly added head
 	// in which case, we make the head a semi-circle
 	// also updates directionOut and isHead of old head and all previous tiles if necessary
-	updateHeadBorderRadius(updating = true) {
-		this.emit("updateHeadBorderRadius", updating);
+	updateHeadBorderRadius(oldHead = true) {
+		this.emit("updateHeadBorderRadius", oldHead);
 
 		// keep track of changed Tiles
 		const tileChanges = [];
 
 		// if we're not updating, just add the 50% rounded corner
-		if (!updating) {
+		if (!oldHead) {
 			const head = this.head;
 			head.borderRadius = [
 				this.currentDirection[0] == -1 || this.currentDirection[1] == -1 ? 50 : 0,
