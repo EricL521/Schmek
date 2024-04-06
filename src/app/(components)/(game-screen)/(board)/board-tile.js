@@ -152,29 +152,45 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		}
 		// if tile is a head, animate it in, and animate tile clip properly
 		else if (tile.isHead) {
+			// animate transform and also width or height, depending on direction
+			animations.current.push(tileElement.current.animate([
+				{
+					transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
+						+ -tile.directionIn[1] * 100 + '%)'
+				},
+				{ 
+					transform: 'translate(0, 0)' 
+				}
+			], {
+				duration: travelSpeed * 1000,
+				easing: 'ease',
+				fill: 'both'
+			}));
+
 			// current tile at the oldHead position
 			const oldHead = board[tile.position[1] - tile.directionIn[1]]
 				[tile.position[0] - tile.directionIn[0]];
 			if (oldHead) {
-				// animate transform and also width or height, depending on direction
-				animations.current.push(tileElement.current.animate([
-					{
-						transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
-							+ -tile.directionIn[1] * 100 + '%)'
-					},
-					{ 
-						transform: 'translate(0, 0)' 
-					}
+				// animate tile clipping to mimic oldHead tile's border radius animation
+				animations.current.push(tileElementClip.current.animate([
+					tileClipInitialBorderRadiusStyle,
+					{ borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
 				], {
 					duration: travelSpeed * 1000,
 					easing: 'ease',
 					fill: 'both'
 				}));
+			}
 
-				// animate tile clipping to mimic oldHead tile's border radius animation
-				animations.current.push(tileElementClip.current.animate([
-					tileClipInitialBorderRadiusStyle,
-					{ borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+			// if oldTileElement exists, then animate it to shrink to head position (it's being eaten)
+			if (oldTileElement.current) {
+				animations.current.push(oldTileElement.current.animate([
+					{ scale: tile.oldTile.size ?? 1 },
+					{ 
+						scale: 0, 
+						transformOrigin: (50 + (-tile.directionIn[0] * 50)) + '%' + 
+									' ' + (50 + (-tile.directionIn[1] * 50)) + '%'
+					}
 				], {
 					duration: travelSpeed * 1000,
 					easing: 'ease',
