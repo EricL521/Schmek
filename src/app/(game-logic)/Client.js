@@ -35,9 +35,12 @@ class Client extends KeybindManager {
 		this.socket.on("gameUpdate", (tileChanges, headPos, travelTPS) => {
 			// update board state & head position
 			this.updateBoard(tileChanges);
-			this.olderHeadPos = this.oldHeadPos;
-			this.oldHeadPos = this.headPos;
-			this.headPos = headPos?? this.headPos;
+			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
+			if (headPosChanged) {
+				this.olderHeadPos = this.oldHeadPos;
+				this.oldHeadPos = this.headPos;
+				this.headPos = headPos?? this.headPos;
+			}
 
 			// update and emit travelSpeed
 			const travelSpeed = 1 / travelTPS;
@@ -48,7 +51,9 @@ class Client extends KeybindManager {
 					this.emit("travelSpeed", this.travelSpeed);
 			}
 
-			this.emit("gameUpdate", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
+			// only emit gameUpdate if something changed
+			if (tileChanges.length || headPosChanged)
+				this.emit("gameUpdate", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 		});
 
 		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
