@@ -230,6 +230,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		const intervals = animations.current.map((animation) => {
 			const currentTime = performance.now();
 			return setInterval(() => {
+				tile.animated = true; // once we get to the intervals, we assume tile will be animated
 				const timeRemaining = travelSpeed * 1000 - (performance.now() - currentTime);
 				const newPlaybackRate = (travelSpeed * 1000 - animation.currentTime) / timeRemaining;
 				if (newPlaybackRate > 0 && newPlaybackRate < Infinity) animation.playbackRate = newPlaybackRate;
