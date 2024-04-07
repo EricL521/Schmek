@@ -1,6 +1,6 @@
 // component that renders the board
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import style from "./board.module.css";
 
@@ -108,15 +108,16 @@ export default function Board({ client, tileSize }) {
 	}, [boardState, headPos, boardElement, tileSize, windowSize]);
 	
 	// generate table
-	const getTileKey = (tile) => tile.position.join(',') + ' ' + Math.random(); // temporary fix to force new elements
-	// NOTE: forcing new elements might be a permanent thing; only a few tiles would actually be reused
-	// and it results in buggy behavior with tiles reverting to the oldTile for some reason
+	const getTileId = useCallback((tile) => tile.position.join(','), []); 
+	// NOTE: adding Math.random to tile keys to force new components
+	//  might be a permanent thing; only a few tiles would actually be reused
+	// and it results in buggy behavior with tiles reverting to the oldTile
 	// this is because tile.animated isn't set until the animation finishes, which runs after 
-	// the initial tile is set, but before the useEffect animation, which means it gets stuck on the oldTile
-	// without animating to the new one, but only sometimes
+	// the initial tile is created, but before the useEffect animation, which means it gets stuck on the oldTile
+	// without animating to the new one, but only some of the time
 	const rows = useMemo(() => croppedBoardState.map((row) =>
 		row.map(tile => tile.type &&
-			<BoardTile key={getTileKey(tile)} tileID={getTileKey(tile)} 
+			<BoardTile key={getTileId(tile) + ' ' + Math.random()} tileID={getTileId(tile)} 
 				board={boardState} tile={tile} tileSize={tileSize} travelSpeed={travelSpeed} />
 		)
 	), [croppedBoardState, tileSize, travelSpeed]);
