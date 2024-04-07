@@ -25,7 +25,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 				+ -tile.directionIn[1] * 100 + '%)' }
 			: {}
 		)
-	}), [tileSize, travelSpeed]);
+	}), [tileSize]);
 	const getOldTileStyle = useCallback((oldTile, currentTile) => ({
 		... getTileStyle(oldTile),
 		... (
@@ -101,7 +101,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		// basically, if the elements already exist, then just set html again
 		if (tileElement.current) Object.assign(tileElement.current.style, initialTileStyle);
 		if (tileElementClip.current) Object.assign(tileElementClip.current.style, tileClipInitialStyle);
-	}, [tile]);
+	}, [initialTileStyle, tileClipInitialStyle]);
 	// store all animations in a ref
 	const animations = useRef([]);
 	// run following after render:
@@ -248,7 +248,8 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			}
 			for (const interval of intervals) clearInterval(interval);
 		};
-	}, [tile]);
+	}, [tile, board, getOldTileStyle, getTileStyle, initialTileStyle, 
+		tileClipInitialBorderRadiusStyle, tileSize, travelSpeed]);
 
 	return (
 		<div id={tileID} style={getTileContainerStyle(tile)} className={style['tile-container']}>

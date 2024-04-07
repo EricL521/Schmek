@@ -58,7 +58,7 @@ export default function Board({ client, tileSize }) {
 	const boardPosStyle = useMemo(() => ({
 		left: -1 * (headPos[0] + 0.5 + 0.25 * (headPos[0] - oldHeadPos[0])) * tileSize + 'px',
 		top: -1 * (headPos[1] + 0.5 + 0.25 * (headPos[1] - oldHeadPos[1])) * tileSize + 'px',
-	}), [headPos, tileSize]);
+	}), [headPos, oldHeadPos, tileSize]);
 	const boardBorderStyle = useMemo(() => ({
 		boxShadow: '0 0 ' + 5*tileSize + 'px ' + 5*tileSize + 'px var(--secondary-color)',
 	}), [tileSize]);
@@ -120,7 +120,7 @@ export default function Board({ client, tileSize }) {
 			<BoardTile key={getTileId(tile) + ' ' + Math.random()} tileID={getTileId(tile)} 
 				board={boardState} tile={tile} tileSize={tileSize} travelSpeed={travelSpeed} />
 		)
-	), [croppedBoardState, tileSize, travelSpeed]);
+	), [croppedBoardState, tileSize, travelSpeed, boardState, getTileId]);
 
 	return (
 		<div style={{...boardTransitionDuration, ...boardTransitionPropertyStyle, ...boardPosStyle, ...boardSizeStyle, ...boardBorderStyle}} id={style['board']} ref={boardElement}>
