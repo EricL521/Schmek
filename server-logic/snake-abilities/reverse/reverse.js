@@ -21,20 +21,20 @@ module.exports = {
 			const tail = snake.body.splice(snake.body.length - amountKilled, amountKilled);
 			// create new dead snake
 			deadSnake = game.addDeadSnake(null, snake.name, snake.color, tail, false);
+			deadSnake.head.directionOut = snake.newDirection;
 		}
 
 		// reverse body
 		snake.body.reverse();
 		// flip directionIn and directionOut of each Tile
 		for (const tile of snake.body) 
-			[tile.directionIn, tile.directionOut] = [tile.directionOut.map(x => -x), tile.directionIn.map(x => -x)]
+			[tile.directionIn, tile.directionOut] = [tile.directionOut.map(x => -x), tile.directionIn.map(x => -x)];
 
 		// set current direction and newDirection to the direction of the new head
 		snake.currentDirection = snake.head.directionIn;
 		snake.setDirection(snake.head.directionOut);
 
-		// update tail and head corners
-		tileChanges.push(...snake.updateTailBorderRadius());
+		// update head corners
 		tileChanges.push(...snake.updateHeadBorderRadius(false));
 
 		return [tileChanges, [snake.head.position, snake.newDirection], deadSnake];

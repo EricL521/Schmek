@@ -170,7 +170,7 @@ class Game {
 			const killSnake = updateFunctions.every(updateFunction => {
 				const result = updateFunction(this, snake, newHeadTile);
 				if (result) { // if result is an array, add result to tileChanges and stop executing functions
-					if (!Array.isArray(result)) console.error("Custom function must return an array");
+					if (!Array.isArray(result)) console.error("Custom function must return an array of tile updates");
 					else {
 						snakeTileChanges.push(...result);
 						return false; // stop executing functions
