@@ -3,9 +3,7 @@ const { AbilityManager } = require("./Ability-Manager.js");
 
 // at what lengths of the snake to give abilities
 // NOTE: Currently, there is only 3 max upgrades, so there's 3 lengths
-const abilityUpgradeLengths = new Set([
-	10, 20, 40
-]);
+const abilityUpgradeLengths = [10, 20, 40];
 
 // represents a snake, dead or alive
 // if alive, it represents a person's snake
@@ -59,12 +57,16 @@ class Snake extends AbilityManager {
 	// for client to pick an ability or subability
 	initializeAbilityUpgradeListener() {
 		this.availableUpgrades = 0;
+		this.totalUpgrades = 0; // how many upgrades the snake has gotten
 		this.on("grow", () => {
 			// if snake length is in abilityUpgradeLengths, emit event
-			if (abilityUpgradeLengths.has(this.body.length)) {
-				this.availableUpgrades ++;
-				const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
-				this.socket.emit("abilityUpgrade", this.subabilitiesArray, isUpgrade);
+			for (let i = abilityUpgradeLengths.length; i >= this.totalUpgrades; i--) {
+				if (this.body.length >= abilityUpgradeLengths[i]) {
+					this.availableUpgrades ++;
+					this.totalUpgrades ++;
+					const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
+					this.socket.emit("abilityUpgrade", this.subabilitiesArray, isUpgrade);
+				}
 			}
 		});
 	}
