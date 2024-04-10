@@ -60,13 +60,14 @@ class Snake extends AbilityManager {
 		this.totalUpgrades = 0; // how many upgrades the snake has gotten
 		this.on("grow", () => {
 			// if snake length is in abilityUpgradeLengths, emit event
-			for (let i = abilityUpgradeLengths.length; i >= this.totalUpgrades; i--) {
+			for (let i = this.totalUpgrades; i < abilityUpgradeLengths.length; i ++) {
 				if (this.body.length >= abilityUpgradeLengths[i]) {
 					this.availableUpgrades ++;
 					this.totalUpgrades ++;
 					const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
 					this.socket.emit("abilityUpgrade", this.subabilitiesArray, isUpgrade);
 				}
+				else break; // the upgrade lengths are in ascending order
 			}
 		});
 	}
