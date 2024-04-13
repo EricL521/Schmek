@@ -14,22 +14,28 @@ class Tile {
 	// size is a number, 1 or less, that scales the size of the tile
 	// borderRadius is an array of 4 numbers, topleft, topright, bottomright, bottomleft, of the border radius (in percent)
 	// directionIn and directionOut are both [x, y]
+	// index is what index the tile is in the game tile array at its position
 	constructor(position, type, color, size = 1, borderRadius = [0, 0, 0, 0], 
-		directionIn = [0, 0], directionOut = [0, 0], isHead = false, isTail = false) {
+		directionIn = [0, 0], directionOut = [0, 0], isHead = false, isTail = false, 
+		underground = false, previousUnderground = false) {
 		this.position = position;
 		this.color = color;
 		this.size = size ?? 1;
 		this.borderRadius = borderRadius?? [0, 0, 0, 0];
+
 		this.directionIn = directionIn ?? [0, 0];
 		this.directionOut = directionOut ?? [0, 0];
 
 		this.type = type;
 		this.isHead = isHead?? false;
 		this.isTail = isTail?? false;
+		this.underground = underground?? false;
+		this.previousUnderground = previousUnderground?? false;
 	}
 	get positionString() { return Tile.positionToString(this.position); }
 
-	// NOTE: this function excludes this.dead, which is added when a snake dies
+	// NOTE: this function only includes things the client needs
+	// so it excludes this.dead, which is added when a snake dies
 	toJSON() {
 		return {
 			position: this.position,
@@ -40,7 +46,9 @@ class Tile {
 			directionOut: this.directionOut,
 			type: this.type,
 			isHead: this.isHead,
-			isTail: this.isTail
+			isTail: this.isTail,
+			underground: this.underground,
+			previousUnderground: this.previousUnderground,
 		};
 	}
 }

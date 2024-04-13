@@ -11,6 +11,7 @@
 	position: fixed;
 	top: 0;
 	left: 0;
+	z-index: 1000;
 	width: 100vw;
 	
     transition: visibility 0.25s ease, transform 0.25s ease;

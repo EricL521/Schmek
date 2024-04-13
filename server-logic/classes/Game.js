@@ -8,7 +8,7 @@ class Game {
 		this.dimensions = dimensions;
 		// tiles is a map of positions to Tile objects
 		// emptyTiles is a set of positions
-		[this.tiles, this.emptyTiles] = this.initializeTiles(this.dimensions);
+		[this.tiles, this.undergroundTiles, this.emptyTiles] = this.initializeTiles(this.dimensions);
 		this.snakes = new Map(); // maps socket to snake
 		this.nonPlayerSnakes = new Set(); // stores snakes that aren't controlled by a player
 		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
@@ -21,8 +21,10 @@ class Game {
 		this.generateFood(numFood, true, true);
 	}
 	get tilesArray() { return Array.from(this.tiles.values()); }
+	get undergroundTilesArray() { return Array.from(this.undergroundTiles.values()); }
 	initializeTiles(dimensions) {
 		const tiles = new Map();
+		const undergroundTiles = new Map();
 		const emptyTiles = new Set();
 		console.log("Generating Tiles...");
 		for (let y = 0; y < dimensions[0]; y++) {
@@ -33,7 +35,7 @@ class Game {
 				emptyTiles.add(Tile.positionToString([x, y]));
 		}
 		console.log(); // move cursor to next line
-		return [tiles, emptyTiles];
+		return [tiles, undergroundTiles, emptyTiles];
 	}
 
 	// adds a snake to the game
@@ -163,12 +165,13 @@ class Game {
 
 		// if snake is in bounds, check if it has hit anything
 		if (this.isInBounds(newHeadPos)) {
-			const newHeadTile = this.tiles.get(Tile.positionToString(newHeadPos));
+			const newHeadTile = (snake.underground? this.undergroundTiles: this.tiles).get(Tile.positionToString(newHeadPos));
 
-			const updateFunctions = Snake.defaultUpdateFunctions.concat(snake.customUpdateFunctions);
+			const updateFunctions = snake.customUpdateFunctions.concat(Snake.defaultUpdateFunctions);
 			// killSnake is only true if every function returns true
 			const killSnake = updateFunctions.every(updateFunction => {
 				const result = updateFunction(this, snake, newHeadTile);
+				if (result === "kill") return true; // if result is "kill", kill snake
 				if (result) { // if result is an array, add result to tileChanges and stop executing functions
 					if (!Array.isArray(result)) console.error("Custom function must return an array of tile updates");
 					else {
@@ -178,7 +181,7 @@ class Game {
 				}
 				return true; // continue if we haven't returned anything yet
 			});
-			// if none of the functions returned anything, snake dies
+			// if none of the functions returned anything truthy, or if result was kill, snake dies
 			if (killSnake) {
 				// undo head update and snakeTileChanges
 				snake.removeHead();
@@ -204,14 +207,20 @@ class Game {
 	// updates tiles and emptyTiles based on tileChanges
 	updateBoard(tileChanges) {
 		for (const tile of tileChanges) {
-			// update tiles and emptyTiles
-			if (tile.color == null) {
-				this.tiles.delete(tile.positionString);
-				this.emptyTiles.add(tile.positionString);
+			if (tile.underground) {
+				if (tile.color == null) this.undergroundTiles.delete(tile.positionString);
+				else this.undergroundTiles.set(tile.positionString, tile);
 			}
 			else {
-				this.tiles.set(tile.positionString, tile);
-				this.emptyTiles.delete(tile.positionString);
+				// update tiles and emptyTiles
+				if (tile.color == null) {
+					this.tiles.delete(tile.positionString);
+					this.emptyTiles.add(tile.positionString);
+				}
+				else {
+					this.tiles.set(tile.positionString, tile);
+					this.emptyTiles.delete(tile.positionString);
+				}
 			}
 		}
 	}

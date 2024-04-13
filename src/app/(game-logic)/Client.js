@@ -12,6 +12,8 @@ class Client extends KeybindManager {
 		this.initializeSocket();
 
 		this.boardState;
+		this.undergroundBoardState;
+
 		this.olderHeadPos;
 		this.oldHeadPos;
 		this.headPos;
@@ -34,7 +36,7 @@ class Client extends KeybindManager {
 	initializeSocket() {
 		this.socket.on("gameUpdate", (tileChanges, headPos, travelTPS) => {
 			// update board state & head position
-			this.updateBoard(tileChanges);
+			this.updateBoard(this.boardState, this.undergroundBoardState, tileChanges);
 			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
 			if (headPosChanged) {
 				this.olderHeadPos = this.oldHeadPos;
@@ -53,7 +55,7 @@ class Client extends KeybindManager {
 
 			// only emit gameUpdate if something changed
 			if (tileChanges.length || headPosChanged)
-				this.emit("gameUpdate", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
+				this.emit("gameUpdate", this.boardState, this.undergroundBoardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 		});
 
 		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
@@ -137,7 +139,7 @@ class Client extends KeybindManager {
 	joinGameFunction() {
 		this.emit("loadingStatus", "Joining");
 		// send name to server
-		this.socket.emit("join", this.name, this.color, (dimensions, tiles, headPos, serverTPS) => {
+		this.socket.emit("join", this.name, this.color, (dimensions, tiles, undergroundTiles, headPos, serverTPS) => {
 			this.emit("loadingStatus", "Loading");
 
 			// snake is now alive, also reset direction
@@ -149,7 +151,7 @@ class Client extends KeybindManager {
 			this.emit("travelSpeed", this.travelSpeed);
 
 			// initialize board state and head position
-			this.genBoard(dimensions, tiles);
+			this.genBoard(dimensions, tiles, undergroundTiles);
 			this.olderHeadPos = headPos;
 			this.oldHeadPos = headPos;
 			this.headPos = headPos;
@@ -159,7 +161,8 @@ class Client extends KeybindManager {
 		});
 	} 
 	// generates board based on dimensions and tiles when joining game
-	genBoard(dimensions, tiles) {
+	genBoard(dimensions, tiles, undergroundTiles) {
+		// update normal board
 		this.boardState = [];
 		for (let y = 0; y < dimensions[1]; y++) {
 			const row = [];
@@ -168,17 +171,32 @@ class Client extends KeybindManager {
 			}
 			this.boardState.push(row);
 		}
-		this.updateBoard(tiles);
+		this.updateBoard(this.boardState, this.undergroundBoardState, tiles);
+
+		// update below ground board
+		this.undergroundBoardState = [];
+		for (let y = 0; y < dimensions[1]; y++) {
+			const row = [];
+			for (let x = 0; x < dimensions[0]; x++) {
+				row.push(new Tile([x, y]));
+			}
+			this.undergroundBoardState.push(row);
+		}
+		this.updateBoard(this.boardState, this.undergroundBoardState, undergroundTiles);
 	}
 
 	// applies tile changes to board state
 	// NOTE: also stores oldTile to tile.oldTile
-	updateBoard(tileChanges) {
+	updateBoard(boardState, undergroundBoardState, tileChanges) {
 		for (const tile of tileChanges) {
+			let correctBoardState;
+			if (tile.underground) correctBoardState = undergroundBoardState;
+			else correctBoardState = boardState;
+
 			const [x, y] = tile.position;
-			tile.oldTile = this.boardState[y][x];
+			tile.oldTile = correctBoardState[y][x];
 			tile.animated = false;
-			this.boardState[y][x] = tile;
+			correctBoardState[y][x] = tile;
 		}
 	}
 }

@@ -11,8 +11,9 @@ export default function Board({ client, tileSize }) {
 	// add listeners for boardstate and headpos to client
 	useEffect(() => {
 		// add listener for when board is updated or initialized
-		const gameUpdateListener = (boardState, headPos, oldHeadPos) => {
+		const gameUpdateListener = (boardState, undergroundBoardState, headPos, oldHeadPos) => {
 			if (boardState) setBoardState([... boardState]);
+			if (undergroundBoardState) setUndergroundBoardState([... undergroundBoardState]);
 			if (headPos) setHeadPos([... headPos]);
 			if (oldHeadPos) setOldHeadPos([... oldHeadPos]);
 		};
@@ -27,6 +28,7 @@ export default function Board({ client, tileSize }) {
 	}, [client]);
 	// initialize board state and head position to client's
 	const [boardState, setBoardState] = useState(client?.boardState);
+	const [undergroundBoardState, setUndergroundBoardState] = useState(client?.undergroundBoardState);
 	const [headPos, setHeadPos] = useState(client?.headPos);
 	const [oldHeadPos, setOldHeadPos] = useState(client?.oldHeadPos);
 
@@ -75,7 +77,7 @@ export default function Board({ client, tileSize }) {
 	}, []);
 	// crop boardstate to only include tiles that are on screen, when moving between oldHeadPos and headPos
 	// also get style for offsetting board b/c tiles we cropped off
-	const croppedBoardState = useMemo(() => {
+	const [croppedBoardState, croppedUndergroundBoardState] = useMemo(() => {
 		// get tileSize in pixels
 		const tileSizePx = tileSize;
 		// get number of tiles that fit on the screen left and right and up and down of head
@@ -103,24 +105,33 @@ export default function Board({ client, tileSize }) {
 		// crop y, then x
 		const croppedBoardState = boardState.slice(minY, maxY + 1)
 			.map(row => row.slice(minX, maxX + 1));
+		const croppedUndergroundBoardState = undergroundBoardState.slice(minY, maxY + 1)
+			.map(row => row.slice(minX, maxX + 1));
 
-		return croppedBoardState;
-	}, [boardState, headPos, boardElement, tileSize, windowSize]);
+		return [croppedBoardState, croppedUndergroundBoardState];
+	}, [boardState, undergroundBoardState, headPos, boardElement, tileSize, windowSize]);
 	
 	// generate table
-	const getTileId = useCallback((tile) => tile.position.join(','), []); 
+	const getTileId = useCallback((tile) => (tile.underground? 'u': 'n') + ' ' + tile.position.join(','), []); 
 	// NOTE: adding Math.random to tile keys to force new components
-	//  might be a permanent thing; only a few tiles would actually be reused
+	// might be a permanent thing; only a few tiles would actually be reused
 	// and it results in buggy behavior with tiles reverting to the oldTile
 	// this is because tile.animated isn't set until the animation finishes, which runs after 
 	// the initial tile is created, but before the useEffect animation, which means it gets stuck on the oldTile
 	// without animating to the new one, but only some of the time
 	const rows = useMemo(() => croppedBoardState.map((row) =>
-		row.map(tile => tile.type &&
+		row.map(tile => tile?.type &&
 			<BoardTile key={getTileId(tile) + ' ' + Math.random()} tileID={getTileId(tile)} 
-				board={boardState} tile={tile} tileSize={tileSize} travelSpeed={travelSpeed} />
+				board={boardState} undergroundBoard={undergroundBoardState} tile={tile} 
+				tileSize={tileSize} travelSpeed={travelSpeed} />
 		)
-	), [croppedBoardState, tileSize, travelSpeed, boardState, getTileId]);
+	).concat(croppedUndergroundBoardState.map((row) => 
+		row.map(tile => tile?.type &&
+			<BoardTile key={getTileId(tile) + ' ' + Math.random()} tileID={getTileId(tile)} 
+				board={boardState} undergroundBoard={undergroundBoardState} tile={tile} 
+				tileSize={tileSize} travelSpeed={travelSpeed} />
+		)
+	)), [croppedBoardState, croppedUndergroundBoardState, tileSize, travelSpeed, boardState, getTileId]);
 
 	return (
 		<div style={{...boardTransitionDuration, ...boardTransitionPropertyStyle, ...boardPosStyle, ...boardSizeStyle, ...boardBorderStyle}} id={style['board']} ref={boardElement}>

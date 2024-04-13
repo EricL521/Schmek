@@ -4,6 +4,6 @@ module.exports = {
 		// add snake to game
 		const snake = game.addSnake(socket, name, color);
 		// send game state to client
-		callback(game.dimensions, game.tilesArray, snake.head.position, game.tps);
+		callback(game.dimensions, game.tilesArray, game.undergroundTilesArray, snake.head.position, game.tps);
 	}
 };

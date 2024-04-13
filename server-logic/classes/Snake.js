@@ -50,7 +50,7 @@ class Snake extends AbilityManager {
 		// speed is how many times per main game tick the snake moves
 		this.speed = 1;
 
-		// custom update functions, which run AFTER default update functions
+		// custom update functions, which run BEFORE default update functions
 		this.customUpdateFunctions = [];
 	}
 	// adds listener for snake length, and emits event 
@@ -208,7 +208,10 @@ class Snake extends AbilityManager {
 			// add new head
 			const oldHeadPos = this.head.position;
 			const newHeadPos = [oldHeadPos[0] + this.newDirection[0], oldHeadPos[1] + this.newDirection[1]];
-			this.body.push(new Tile(newHeadPos, "snake", this.color, null, null, this.newDirection, null, true, false));
+			this.body.push(new Tile(newHeadPos, "snake", this.color, null, null, 
+				this.newDirection, null, true, false, false, this.head.underground));
+			// emit headAdded event for dig ability to change head to underground
+			this.emit("headAdd", this.head);
 			// update currentDirection
 			this.currentDirection = this.newDirection;
 			// add new head to tileChanges, after applying border radius
@@ -233,11 +236,12 @@ class Snake extends AbilityManager {
 
 		// only update if snake is moving
 		if (this.directionMagnitude !== 0) {
-			const oldTailPos = this.body.shift().position;
+			const oldTail = this.body.shift();
+			const oldTailPos = oldTail.position;
 			const newTailPos = this.tail.position;
 			// if new tail is not the same as old tail, add old tail to tileChanges
 			if (addRemovedTailToChanges && !(oldTailPos[0] == newTailPos[0] && oldTailPos[1] == newTailPos[1])) 
-				tileChanges.push(new Tile(oldTailPos, null, null));
+				tileChanges.push(new Tile(oldTailPos, null, null, null, null, null, null, null, null, oldTail.underground));
 
 			// update new tail border radius
 			tileChanges.push(...this.updateTailBorderRadius());

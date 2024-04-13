@@ -1,6 +1,6 @@
 // logic for making the tail that splits off and moves in random directions
 
-const reverseAbility = require("../reverse.js");
+const reverseAbility = require("../../reverse.js");
 
 const directions = new Set([
 	[0, 1],
@@ -11,7 +11,7 @@ const directions = new Set([
 
 module.exports = {
 	// no onmount function, because we are keeping the same cooldown
-	activate: (game, snake, proportionKept = 0.5) => {
+	activate: (game, snake, proportionKept = 0.75) => {
 		const output = reverseAbility.activate(game, snake, proportionKept);
 		if (!output) return;
 		// get tail snake

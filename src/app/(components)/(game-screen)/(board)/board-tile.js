@@ -8,7 +8,7 @@ import style from "./board.module.css";
 // travelSpeed is how long it takes the snake to move one grid space IN SECONDS
 // board is used to get the new tail when necessary (see tail animation)
 // also because of how these are rendered, they are essetially being initialized every time
-export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }) {
+export default function BoardTile({ tileID, tile, board, undergroundBoard, tileSize, travelSpeed }) {
 	const getTileSizeStyle = useCallback(() => ({
 		width: tileSize + 'px',
 		height: tileSize + 'px',
@@ -17,13 +17,13 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	const getTileStyle = useCallback((tile) => ({
 		transition: 'none',
 		backgroundColor: tile.color?? 'transparent',
-		scale: tile.size ?? 1,
 		borderRadius: tile.borderRadius?.map(x => x/100*tileSize + 'px').join(' '),
 		... (
 			(!tile.animated && (tile.isHead || tile.isTail))?
 			{ transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
-				+ -tile.directionIn[1] * 100 + '%)' }
-			: {}
+				+ -tile.directionIn[1] * 100 + '%) '
+				+ 'scale(' + tile.size?? 1 + ')' }
+			: { transform: 'scale(' + tile.size?? 1 + ')' }
 		)
 	}), [tileSize]);
 	const getOldTileStyle = useCallback((oldTile, currentTile) => ({
@@ -31,7 +31,8 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		... (
 			(!currentTile.animated && (currentTile.isHead || currentTile.isTail))?
 			{ transform: 'translate(' + -currentTile.directionIn[0] * 100 + '%, ' 
-				+ -currentTile.directionIn[1] * 100 + '%)' }
+				+ -currentTile.directionIn[1] * 100 + '%)' 
+				+ ' scale(' + oldTile.size?? 1 + ')'}
 			: {}
 		)
 	}), [getTileStyle]);
@@ -41,7 +42,20 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		// get position of tile
 		left: tile.position[0] * tileSize + 'px',
 		top: tile.position[1] * tileSize + 'px',
+		// make underground tiles appear below normal tiles
+		zIndex: tile.underground? 0 : 1,
 	}), [getTileSizeStyle, tileSize]);
+
+	// returns the current tile that is at the location that this tile came from
+	const currentTileAtPreviousPos = useMemo(() => {
+		const currentTile = (tile.previousUnderground? undergroundBoard : board)
+			[tile.position[1] - tile.directionIn[1]]
+			[tile.position[0] - tile.directionIn[0]];
+		return currentTile;
+	}, [tile, board, undergroundBoard]);
+	// returns the tile that this tile came from in the snake
+	// for example, if used on the head, it would return the head from last frame
+	const previousSnakeTile = useMemo(() => currentTileAtPreviousPos.oldTile, [currentTileAtPreviousPos]);
 
 	// returns the initial state of tile before animations
 	const initialTileStyle = useMemo(() => {
@@ -49,15 +63,13 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		if (tile.isHead) return getTileStyle(tile);
 		if (tile.oldTile.type && tile.isTail) {
 			// get style of old tail
-			const oldTail = board[tile.position[1] - tile.directionIn[1]]
-				[tile.position[0] - tile.directionIn[0]].oldTile;
-			return getOldTileStyle(oldTail, tile);
+			return getOldTileStyle(previousSnakeTile, tile);
 		}
 		// otherwise, just return old tile style if it exists
 		if (tile.oldTile.type) return getOldTileStyle(tile.oldTile, tile);
 		// if old tile doesn't exist, then just return tile style
 		return getTileStyle(tile);
-	}, [tile, board, getTileStyle, getOldTileStyle]);
+	}, [tile, previousSnakeTile, getTileStyle, getOldTileStyle]);
 
 	// calculate size of tile clip (extra padding)
 	const tileClipSizeStyle = useMemo(() => ({ 
@@ -75,15 +87,13 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 	const tileClipInitialBorderRadiusStyle = useMemo(() => {
 		// if tile is head, get border radius of old head tile
 		if (tile.isHead) {
-			const oldHead = board[tile.position[1] - tile.directionIn[1]]
-				[tile.position[0] - tile.directionIn[0]].oldTile;
-			if (oldHead) return {
-				borderRadius: oldHead.borderRadius.map(x => x/100*tileSize + 'px').join(' ')
+			if (previousSnakeTile) return {
+				borderRadius: previousSnakeTile.borderRadius.map(x => x/100*tileSize + 'px').join(' ')
 			}
 		}
 		// otherwise, initial clipping border radius is 0
 		return { borderRadius: 0 };
-	}, [board, tile, tileSize]);
+	}, [previousSnakeTile, tile, tileSize]);
 	// returns initial state of tile clip before animations
 	const tileClipInitialStyle = useMemo(() => ({
 		transition: 'none',
@@ -119,12 +129,13 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 		// animate old tile to new if new tile is tail
 		if (tile.isTail) {
 			// animate new tile
-			Object.assign(tileElement.current.style, {... getTileStyle(tile), transform: 'translate(0, 0)'});
+			Object.assign(tileElement.current.style, {... getTileStyle(tile), 
+				transform: 'translate(0, 0) scale(' + tile.size?? 1 + ')'});
 			animations.current.push(tileElement.current.animate([
 				initialTileStyle,
 				{
 					... getTileStyle(tile),
-					transform: 'translate(0, 0)'
+					transform: 'translate(0, 0) scale(' + tile.size?? 1 + ')'
 				}
 			], {
 				duration: travelSpeed * 1000,
@@ -132,37 +143,32 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 				fill: 'backwards'
 			}));
 
-			// get the old tail
-			const oldTail = board[tile.position[1] - tile.directionIn[1]]
-				[tile.position[0] - tile.directionIn[0]].oldTile;
-			// animate old tile only if there was an old tail
-			if (oldTail) {
-				// animate oldTile border radius to the tail's
-				if (tile.oldTile?.type) {
-					Object.assign(oldTileElement.current.style, { 
-						borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') 
-					});
-					animations.current.push(oldTileElement.current.animate([
-						{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
-						{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
-					], {
-						duration: travelSpeed * 1000,
-						easing: 'linear',
-						fill: 'backwards'
-					}));
-				}
+			// animate oldTile border radius to the tail's
+			if (tile.oldTile?.type) {
+				Object.assign(oldTileElement.current.style, { 
+					borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') 
+				});
+				animations.current.push(oldTileElement.current.animate([
+					{ borderRadius: (tile.oldTile?.borderRadius?? [0, 0, 0, 0]).map(x => x/100*tileSize + 'px').join(' ') },
+					{ borderRadius: tile.borderRadius.map(x => x/100*tileSize + 'px').join(' ') }
+				], {
+					duration: travelSpeed * 1000,
+					easing: 'linear',
+					fill: 'backwards'
+				}));
 			}
 		}
 		// if tile is a head, animate it in, and animate tile clip properly
 		else if (tile.isHead) {
 			// animate transform and also width or height, depending on direction
-			Object.assign(tileElement.current.style, { transform: 'translate(0, 0)' });
+			Object.assign(tileElement.current.style, { transform: 'translate(0, 0) scale(' + tile.size?? 1 + ')'});
 			animations.current.push(tileElement.current.animate([
 				{
 					transform: 'translate(' + -tile.directionIn[0] * 100 + '%, ' 
-						+ -tile.directionIn[1] * 100 + '%)'
+						+ -tile.directionIn[1] * 100 + '%) '
+						+ 'scale(' + previousSnakeTile.size?? 1 + ')'
 				},
-				{ transform: 'translate(0, 0)' }
+				{ transform: 'translate(0, 0) scale(' + tile.size?? 1 + ')'}
 			], {
 				duration: travelSpeed * 1000,
 				easing: 'ease',
@@ -170,8 +176,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			}));
 
 			// current tile at the oldHead position
-			const oldHead = board[tile.position[1] - tile.directionIn[1]]
-				[tile.position[0] - tile.directionIn[0]];
+			const oldHead = currentTileAtPreviousPos;
 			if (oldHead) {
 				// animate tile clipping to mimic oldHead tile's border radius animation
 				Object.assign(tileElementClip.current.style, {
@@ -190,14 +195,14 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			// if oldTileElement exists, then animate it to shrink to head position (it's being eaten)
 			if (oldTileElement.current) {
 				Object.assign(oldTileElement.current.style, {
-					scale: 0, 
+					transform: 'scale(0)', 
 					transformOrigin: (50 + (-tile.directionIn[0] * 50)) + '%' + 
 								' ' + (50 + (-tile.directionIn[1] * 50)) + '%'
 				});
 				animations.current.push(oldTileElement.current.animate([
-					{ scale: tile.oldTile.size ?? 1 },
+					{ transform: 'scale(' + tile.oldTile.size ?? 1 + ')' },
 					{ 
-						scale: 0, 
+						transform: 'scale(0)', 
 						transformOrigin: (50 + (-tile.directionIn[0] * 50)) + '%' + 
 									' ' + (50 + (-tile.directionIn[1] * 50)) + '%'
 					}
@@ -249,7 +254,7 @@ export default function BoardTile({ tileID, tile, board, tileSize, travelSpeed }
 			}
 			for (const interval of intervals) clearInterval(interval);
 		};
-	}, [tile, board, getOldTileStyle, getTileStyle, initialTileStyle, 
+	}, [tile, previousSnakeTile, getOldTileStyle, getTileStyle, initialTileStyle, 
 		tileClipInitialBorderRadiusStyle, tileSize, travelSpeed]);
 
 	return (
