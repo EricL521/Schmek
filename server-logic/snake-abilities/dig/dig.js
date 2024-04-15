@@ -22,17 +22,16 @@ module.exports = {
 	},
 	activate: (_, snake, length = 10) => {
 		snake.underground = true; // make snake underground (only used in onmount function)
-		let totalUpdates = 0; // how many updates the ability has left
+		let totalUpdates = 0; // how many updates the ability has done
 		const headAddListener = (snakeHead) => {
+			// change head to underground
+			snakeHead.underground = true;
+			snakeHead.size = 0.5;
+
 			totalUpdates ++;
-			if (totalUpdates > length) {
+			if (totalUpdates >= length) {
 				snake.off("headAdd", headAddListener);
 				snake.underground = false;
-			}
-			else {
-				// change head to underground
-				snakeHead.underground = true;
-				snakeHead.size = 0.5;
 			}
 		};
 		snake.on("headAdd", headAddListener);
