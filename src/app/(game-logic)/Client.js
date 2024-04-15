@@ -105,13 +105,19 @@ class Client extends KeybindManager {
 			if (timeSinceLastAbilityUse < this.cooldown * 1000) return;
 
 			this.socket.emit("activateAbility", (headPos, direction) => {
-				this.headPos = headPos ?? this.headPos;
-				this.direction = direction ?? this.direction;
+				const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
+				if (headPosChanged) {
+					this.olderHeadPos = this.oldHeadPos;
+					this.oldHeadPos = this.headPos;
+					this.headPos = headPos?? this.headPos;
+				}
+
+				this.direction = direction?? this.direction;
 				// callback is only called if ability is activated, so set last ability use to now
 				this.lastAbilityUse = new Date(); 
 				this.emit("abilityActivated", this.lastAbilityUse, this.cooldown);
 	
-				this.emit("gameUpdate", null, null, this.headPos);
+				if (headPosChanged) this.emit("gameUpdate", null, null, this.headPos);
 			});
 		});
 
