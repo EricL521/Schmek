@@ -156,7 +156,7 @@ class Client extends KeybindManager {
 			this.oldHeadPos = headPos;
 			this.headPos = headPos;
 
-			this.emit("initialState", this.boardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
+			this.emit("initialState", this.boardState, this.undergroundBoardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 			this.emit("boardInitialized");
 		});
 	} 
