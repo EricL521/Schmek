@@ -111,7 +111,7 @@ class Client extends KeybindManager {
 				this.lastAbilityUse = new Date(); 
 				this.emit("abilityActivated", this.lastAbilityUse, this.cooldown);
 	
-				this.emit("gameUpdate", null, this.headPos);
+				this.emit("gameUpdate", null, null, this.headPos);
 			});
 		});
 
