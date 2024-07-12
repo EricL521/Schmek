@@ -3,4 +3,3 @@ TODO list:
 	- Tunneling/Flying
 	- Disguise??
 - Make a lil logo
-- Make it so snake isn't partially clipped on the right side when going down
