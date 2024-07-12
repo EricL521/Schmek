@@ -7,3 +7,19 @@
 	justify-content: center;
 }
 
+#ability-indicators-div {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	z-index: 1000;
+	width: 100%;
+	
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+
+	pointer-events: none;
+}
+

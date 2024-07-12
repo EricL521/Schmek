@@ -6,8 +6,8 @@
 // and cooldown is how long before the snake can use the ability again
 // returns true if it was succesful
 module.exports = {
-	onmount: (snake, cooldown = 10) => {
-		snake.cooldown = cooldown;
+	onmount: (snake, abilityManager, cooldown = 10) => {
+		abilityManager.cooldown = cooldown;
 
 		// allow snake to pass through non-underground things if it's underground
 		snake.customUpdateFunctions.push((_, snake, newHeadTile) => {

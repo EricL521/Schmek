@@ -107,16 +107,16 @@ class Game {
 	}
 	getSnake(socket) { return this.snakes.get(socket); }
 	// activates the snake's ability
-	activateAbility(socket) {
+	activateAbility(socket, abilityName) {
 		// get snake
 		const snake = this.getSnake(socket);
 		if (!snake) return;
 
 		// activate ability
-		const output = snake.activateAbility(this);
+		const output = snake.activateAbility(abilityName, this);
 		if (!output) return; // if snake doesn't have an ability, return
 
-		const [tileChanges, clientInfo] = [output[0], output[1]];
+		const [tileChanges, clientInfo] = output.length? output: [];
 		// update board and snakes
 		if (tileChanges && tileChanges.length > 0) {
 			this.updateBoard(tileChanges);

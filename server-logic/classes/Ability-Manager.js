@@ -1,14 +1,13 @@
 // logic involved with abilities
 const fs  = require("fs");
 const path = require("path");
-const EventEmitter = require("events");
 
 // load abilities
 console.log("Loading snake abilities...");
 // import all abilities from snake-abilities folder
 // structure of folder: abilityName/abilityName.js, along with subfolders, which are subabilities
 const snakeAbilitiesPath = path.join(__dirname, "..", "snake-abilities");
-const abilities = new Map();
+const abilityOptions = new Map();
 const processDir = (dirPath, dir) => {
 	// if not a directory, skip
 	if (!dir.isDirectory()) return;
@@ -29,66 +28,81 @@ const processDir = (dirPath, dir) => {
 		subabilities: subabilities,
 	}
 };
+// NOTE: processDir adds subabilities
 fs.readdirSync(snakeAbilitiesPath, { withFileTypes: true }).map(dir => processDir(snakeAbilitiesPath, dir)).forEach(ability => {
-	if (ability) abilities.set(ability.name, ability);
+	if (ability) abilityOptions.set(ability.name, ability);
 });
+// also create an array version to send to clients
+// NOTE: THIS VERSION IS ONLY [name, subabilities]
+// returns abilitiesArray (used recursively)
+const processAbilities = (abilities) => {
+	const abilitiesArray = [];
+	abilities.forEach((value, key) => {
+		abilitiesArray.push([key, processAbilities(value.subabilities)]);
+	});
+	return abilitiesArray;
+};
+const abilitieOptionsArray = processAbilities(abilityOptions);
 
-// Snake extends this class
-class AbilityManager extends EventEmitter {
+// AbilityManager for Snakes on SERVER
+class AbilityManager {
+	static get abilityOptions() { return abilityOptions; }
+	// this is used to send to client
+	static get abilityOptionsArray() { return abilitieOptionsArray; }
+	
+
 	constructor() {
-		super();
-
 		// start with no ability
 		// is an array of strings, which describe the ability and subability
 		this.abilityPath = [];
-		this.initializeAbility(); // initialize this.ability
-		this.lastAbilityActivation = null; // last time ability was activated
-		this.cooldown = 0; // cooldown of ability, in seconds
+		// initialize this.ability
+		this.initialize(); 
+		this.lastActivation = null; // last time ability was activated
+		// cooldown of ability, in seconds
+		this.cooldown = 0; // NOTE: updated in ability files 
 	}
 
 	// returns subabilities, if there is an ability, or just all abilities
-	get subabilities() { return this.ability? this.ability.subabilities?? new Map() : abilities; }
-	// returns array of this.subabilities names
-	get subabilitiesArray() { return Array.from(this.subabilities.keys()); }
-	// add new ability to snake
-	upgradeAbility(subability) {
+	get subabilities() { return this.ability? this.ability.subabilities?? new Map() : AbilityManager.abilityOptions; }
+	// returns if this ability is activateable
+	get isActivateable() { return this.ability && this.ability.activate; }
+	// add new sub ability
+	upgrade(snake, subability) {
 		// if subability isn't available, return false
 		if (!this.subabilities.has(subability)) return false;
 
-		// otherwise, update abilityPath and initialize ability
-		this.emit("upgradeAbility", subability);
+		// otherwise, update ability/abilityPath and reinitialize ability
 		this.abilityPath.push(subability);
-		this.initializeAbility();
+		this.initialize();
 		// also call the ability's onmount function
-		if (this.ability.onmount) this.ability.onmount(this);
+		if (this.ability.onmount) this.ability.onmount(snake, this);
 		return true;
 	}
 	// initialize the ability
-	initializeAbility() {
-		let ability = abilities.get(this.abilityPath[0]);
+	initialize() {
+		let ability = AbilityManager.abilityOptions.get(this.abilityPath[0]);
 		for (let i = 1; i < this.abilityPath.length; i++)
 			ability = ability.subabilities.get(this.abilityPath[i]);
 		this.ability = ability;
 	}
-	// activates the snake's ability
-	activateAbility(game) {
-		// make sure snake is alive and has an activatable ability
-		if (!this.alive || !this.ability || !this.ability.activate) return;
+	// activates the ability
+	activate(game, snake) {
+		// make sure this is an activatable ability
+		if (!this.isActivateable) return;
 		// check cooldown
-		if (this.timeSinceLastAbilityActivation < this.cooldown) return;
+		if (this.timeSinceLastActivation < this.cooldown) return;
 
-		this.emit("activateAbility");
 		// call and return output of ability
-		const output = this.ability.activate(game, this);
+		const output = this.ability.activate(game, snake);
 		if (!output) return;
 		// update lastAbilityActivation
-		this.lastAbilityActivation = new Date();
+		this.lastActivation = new Date();
 		return output;
 	}
 	// get time since last ability activation, in seconds
-	get timeSinceLastAbilityActivation() {
-		if (!this.lastAbilityActivation) return Infinity;		
-		return (Date.now() - this.lastAbilityActivation) / 1000;
+	get timeSinceLastActivation() {
+		if (!this.lastActivation) return Infinity;		
+		return (Date.now() - this.lastActivation) / 1000;
 	}
 }
 

@@ -12,11 +12,14 @@ class KeybindManager extends EventEmitter {
 		["moveDown", ["direction", [0, 1]]],
 		["moveLeft", ["direction", [-1, 0]]],
 		["moveRight", ["direction", [1, 0]]],
-		["activateAbility", ["activateAbility"]],
-		["selectAbilityUpgrade1", ["upgradeAbility", 0]],
-		["selectAbilityUpgrade2", ["upgradeAbility", 1]],
-		["selectAbilityUpgrade3", ["upgradeAbility", 2]],
-		["selectAbilityUpgrade4", ["upgradeAbility", 3]],
+		["selectAbilityUpgrade1", ["selectAbility", 0]],
+		["selectAbilityUpgrade2", ["selectAbility", 1]],
+		["selectAbilityUpgrade3", ["selectAbility", 2]],
+		["selectAbilityUpgrade4", ["selectAbility", 3]],
+		["activateAbility1", ["activateAbility", 0]],
+		["activateAbility2", ["activateAbility", 1]],
+		["activateAbility3", ["activateAbility", 2]],
+		["activateAbility4", ["activateAbility", 3]],
 		// if playerTogglePauseGameEnabled is true, add pause game action
 		...(playerTogglePauseGameEnabled? [["togglePauseGame", ["togglePauseGame"]]]: [])
 	]);}
@@ -31,11 +34,14 @@ class KeybindManager extends EventEmitter {
 		["s", new Set(["moveDown"])],
 		["a", new Set(["moveLeft"])],
 		["d", new Set(["moveRight"])],
-		[" ", new Set(["activateAbility"])],
 		["1", new Set(["selectAbilityUpgrade1"])],
 		["2", new Set(["selectAbilityUpgrade2"])],
 		["3", new Set(["selectAbilityUpgrade3"])],
 		["4", new Set(["selectAbilityUpgrade4"])],
+		["j", new Set(["activateAbility1"])],
+		["k", new Set(["activateAbility2"])],
+		["l", new Set(["activateAbility3"])],
+		[";", new Set(["activateAbility4"])],
 		// if playerTogglePauseGameEnabled is true, add pause game keybind
 		...(playerTogglePauseGameEnabled? [["p", new Set(["togglePauseGame"])]]: [])
 	]);}

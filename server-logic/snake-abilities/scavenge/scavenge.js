@@ -2,7 +2,7 @@
 // also makes eating apples half as effective
 
 module.exports = {
-	onmount: (snake, deadSnakeToGrow = 4, appleToGrow = 2) => {
+	onmount: (snake, _, deadSnakeToGrow = 4, appleToGrow = 2) => {
 		snake.deadSnakeEatenAmount = 0; // initialize counter
 		// add custom update function for eating dead snakes
 		snake.customUpdateFunctions.push((_, snake, newHeadTile) => {

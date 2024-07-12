@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 
 import KeybindManager from './Keybind-Manager.js'
 import { Tile } from '../../../server-logic/classes/Tile.js';
+import AbilityManager from './Ability-Manager.js';
 
 class Client extends KeybindManager {
 	// controls is a map of key names to sets of actions
@@ -19,9 +20,10 @@ class Client extends KeybindManager {
 		this.headPos;
 		this.travelSpeed = 0; // seconds per box traveled of snake
 
-		this.cooldown = 0; // cooldown in seconds of ability
-		this.lastAbilityUse = new Date(0); // time of last ability use
-		this.abilityUpgrades; // possible ability upgrade paths
+		this.abilities = new Map(); // abilityName -> AbilityManager
+		this.abilitiesArray = []; // just a map of abilityNames
+		this.numAvailableUpgrades = 0; // number of available upgrades
+		this.abilityOptions; // possible ability upgrade paths
 
 		this.alive = false; // don't update direction if dead
 		this.direction = [0, 0]; // direction of snake, stored so we don't spam the server
@@ -58,30 +60,21 @@ class Client extends KeybindManager {
 				this.emit("gameUpdate", this.boardState, this.undergroundBoardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
 		});
 
-		this.socket.on("abilityUpgrade", (newOptions, isUpgrade, newCooldown) => {
-			this.cooldown = newCooldown?? this.cooldown; // update cooldown
-			this.abilityUpgrades = newOptions; // update ability upgrades
-			this.emit("abilityUpgrade", this.abilityUpgrades, isUpgrade, this.cooldown);
+		// NOTE: this.numAvailableUpgrades is upgraded in a listener
+		this.socket.on("abilityUpgrade", (numAvailableUpgrades) => {
+			this.emit("abilityUpgrade", numAvailableUpgrades);
 		});
 
 		this.socket.on("death", (data) => {
 			this.alive = false;
 
 			this.emit("death", data);
-			// also get rid of ability upgrade popup and cooldown
-			this.cooldown = 0;
-			this.emit("abilityUpgrade", null, false, this.cooldown);
-			this.lastAbilityUse = new Date(0);
-			this.emit("abilityActivated", this.lastAbilityUse);
-		});
-	}
-	// sends message to server to upgrade ability
-	upgradeAbility(abilityName) {
-		this.socket.emit("upgradeAbility", abilityName, (newOptions, isUpgrade, newCooldown) => {
-			this.cooldown = newCooldown?? this.cooldown; // update cooldown
-			this.abilityUpgrades = newOptions; // update ability upgrades
-			// NOTE: newOptions may be null
-			this.emit("abilityUpgrade", newOptions, isUpgrade, this.cooldown);
+			// also get rid of abilities and force popups to update
+			this.abilities = new Map();
+			this.abilitiesArray = [];
+			this.numAvailableUpgrades = 0;
+			this.emit("abilityUpgrade", this.numAvailableUpgrades);
+			this.emit("newAbility"); // causes ability-indicators to update
 		});
 	}
 	// adds listeners for this client's events
@@ -99,36 +92,68 @@ class Client extends KeybindManager {
 			});
 		});
 
-		this.on("activateAbility", () => {
-			// check if cooldown is over, if so don't activate ability
-			const timeSinceLastAbilityUse = Date.now() - this.lastAbilityUse;
-			if (timeSinceLastAbilityUse < this.cooldown * 1000) return;
-
-			this.socket.emit("activateAbility", (headPos, direction) => {
-				const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
-				if (headPosChanged) {
-					this.olderHeadPos = this.oldHeadPos;
-					this.oldHeadPos = this.headPos;
-					this.headPos = headPos?? this.headPos;
-				}
-
-				this.direction = direction?? this.direction;
-				// callback is only called if ability is activated, so set last ability use to now
-				this.lastAbilityUse = new Date(); 
-				this.emit("abilityActivated", this.lastAbilityUse, this.cooldown);
-	
-				if (headPosChanged) this.emit("gameUpdate", null, null, this.headPos);
-			});
+		this.on("activateAbility", (index) => {
+			this.activateAbility(this.abilitiesArray[index]);
 		});
 
-		this.on("upgradeAbility", (index) => {
-			if (!this.abilityUpgrades) return; // can only upgrade if upgrades are available
-			
-			const abilityName = this.abilityUpgrades[index];
-			if (abilityName) this.upgradeAbility(abilityName);
-		});
+		this.on("abilityUpgrade", (numAvailableUpgrades) => this.numAvailableUpgrades = numAvailableUpgrades);
 
 		this.on("togglePauseGame", () => this.socket.emit("togglePauseGame"));
+	}
+
+	// note; this is called from ability-indicator component
+	activateAbility(abilityName) {
+		const ability = this.abilities.get(abilityName);
+		ability?.activateAbility().then(([headPos, direction]) => {
+			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
+			if (headPosChanged) {
+				this.olderHeadPos = this.oldHeadPos;
+				this.oldHeadPos = this.headPos;
+				this.headPos = headPos?? this.headPos;
+			}
+
+			this.direction = direction?? this.direction;
+			this.emit("abilityActivated", ability);
+
+			if (headPosChanged) this.emit("gameUpdate", null, null, this.headPos);
+		}).catch(() => {}); // do nothing if rejected
+	}
+	// note: this is called from upgrade-ability-popup component
+	// if it is a new ability, then abilityName and abilityUpgrade are the same
+	// returns a promise that resolves to true if successful
+	// or false if you already have the upgrade
+	// otherwise rejects
+	upgradeAbility(abilityName, abilityUpgrade) {
+		if (this.numAvailableUpgrades <= 0) return Promise.reject(); // can only upgrade if upgrades are available
+		if (!abilityName || !abilityUpgrade) return Promise.reject(); // and if both are defined
+
+		// check if abilityName and abilityUpgrades are valid
+		const ability = this.abilities.get(abilityName);
+		if (abilityName != abilityUpgrade) {
+			if (!ability) return Promise.resolve(false);
+			// NOTE: hasUpgrade is if you already got the upgrade
+			if (ability.hasUpgrade(abilityUpgrade)) return Promise.resolve(false);
+		}
+		if (ability && abilityName == abilityUpgrade) return Promise.resolve(false);
+		
+		return new Promise((res, _) => {
+			if (ability)
+				ability.upgradeAbility(abilityUpgrade).then((numAvailableUpgrades) => {
+					this.emit("abilityUpgrade", numAvailableUpgrades, ability);
+					res(true);
+				}).catch(() => res(false));
+			else {
+				// if we don't have the ability yet, then create it
+				const newAbility = new AbilityManager(abilityName, 0, this.socket);
+				newAbility.upgradeAbility(abilityUpgrade).then((numAvailableUpgrades) => {
+					this.abilities.set(abilityName, newAbility);
+					this.abilitiesArray.push(abilityName);
+					this.emit("abilityUpgrade", numAvailableUpgrades, newAbility);
+					this.emit("newAbility");
+					res(true);
+				}).catch(() => res(false));
+			}
+		});
 	}
 
 	setName(name) { this.name = name; }
@@ -145,12 +170,17 @@ class Client extends KeybindManager {
 	joinGameFunction() {
 		this.emit("loadingStatus", "Joining");
 		// send name to server
-		this.socket.emit("join", this.name, this.color, (dimensions, tiles, undergroundTiles, headPos, serverTPS) => {
+		this.socket.emit("join", this.name, this.color, (dimensions, tiles, undergroundTiles, headPos, serverTPS, abilityOptions) => {
 			this.emit("loadingStatus", "Loading");
 
 			// snake is now alive, also reset direction
 			this.alive = true;
 			this.direction = [0, 0];
+
+			// reset ability things
+			this.abilities = new Map();
+			this.numAvailableUpgrades = 0;
+			this.emit("newAbility"); // causes ability-indicators to update
 
 			// set and emit travelSpeed
 			this.travelSpeed = 1 / serverTPS;
@@ -162,7 +192,10 @@ class Client extends KeybindManager {
 			this.oldHeadPos = headPos;
 			this.headPos = headPos;
 
-			this.emit("initialState", this.boardState, this.undergroundBoardState, this.headPos, this.oldHeadPos, this.olderHeadPos);
+			this.abilityOptions = abilityOptions;
+
+			this.emit("initialState", this.boardState, this.undergroundBoardState, 
+				this.headPos, this.oldHeadPos, this.olderHeadPos, this.abilityOptions);
 			this.emit("boardInitialized");
 		});
 	} 

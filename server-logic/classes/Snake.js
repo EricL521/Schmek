@@ -1,15 +1,15 @@
 const { Tile } = require("./Tile.js");
 const { AbilityManager } = require("./Ability-Manager.js");
+const EventEmitter = require("events");
 
 // at what lengths of the snake to give abilities
-// NOTE: Currently, there is only 3 max upgrades, so there's 3 lengths
-const abilityUpgradeLengths = [10, 20, 40];
+const abilityUpgradeLengths = [5, 10, 15, 20, 25, 30, 35, 40, 45];
 
 // represents a snake, dead or alive
 // if alive, it represents a person's snake
-class Snake extends AbilityManager {
+class Snake extends EventEmitter {
 	// functions that run to check snake head during update
-	// runs ever function in the array, in order until one returns something an array
+	// runs every function in the array, in order until one returns something an array
 	// if none of them return something truthy, the snake dies
 	static defaultUpdateFunctions = [
 		(_, snake, newHeadTile) => { if (!newHeadTile) return snake.updateTail(); },
@@ -36,6 +36,8 @@ class Snake extends AbilityManager {
 
 	constructor(socket, name, color, body, direction) {
 		super();
+
+		this.abilities = new Map(); // map of snake's current abilities (name -> Ability object)
 		this.initializeAbilityUpgradeListener();
 
 		this.socket = socket;
@@ -64,24 +66,50 @@ class Snake extends AbilityManager {
 				if (this.body.length >= abilityUpgradeLengths[i]) {
 					this.availableUpgrades ++;
 					this.totalUpgrades ++;
-					const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
-					this.socket.emit("abilityUpgrade", this.subabilitiesArray, isUpgrade);
+					this.socket.emit("abilityUpgrade", this.availableUpgrades); 
 				}
 				else break; // the upgrade lengths are in ascending order
 			}
 		});
 	}
-	// override default upgradeAbility to add availableUpgrades logic
-	// returns [subabilitiesArray, isUpgrade, cooldown]
-	// NOTE: subabilitiesArray only returns if ability was added successfully and upgrades are available
-	upgradeAbility(subability) {
-		if (this.availableUpgrades <= 0) return [null];
+	// returns [success, abilityName, cooldown, availableUpgrades]
+	upgradeAbility(abilityName, abilityUpgrade) {
+		if (this.availableUpgrades <= 0) return [false];
 
-		// result is whether or not it was successful
-		const result = super.upgradeAbility(subability);
-		if (result) this.availableUpgrades --;
-		const isUpgrade = this.ability? true : false; // if there's an ability, you can only upgrade it
-		return [result && this.availableUpgrades > 0 ? this.subabilitiesArray : null, isUpgrade, this.cooldown];
+		// if this is a new upgrade abilityName and abilityUpgrade are ewual
+		const ability = this.abilities.get(abilityName);
+		if (ability) {
+			// result is whether or not it was successful
+			const result = ability.upgrade(this, abilityUpgrade);
+			if (!result) return [false];
+			// if successful
+			this.availableUpgrades --;
+			this.emit("abilityUpgrade", abilityName, abilityUpgrade);
+			return [true, abilityName, ability.cooldown, this.availableUpgrades];
+		}
+		// if it is a new ability, then abilityName should equal abilityUpgrade
+		else if (abilityName == abilityUpgrade) {
+			const newAbility = new AbilityManager();
+			// result is whether or not it was successful
+			const result = newAbility.upgrade(this, abilityUpgrade);
+			if (!result) return [false];
+			// if successful
+			this.abilities.set(abilityName, newAbility);
+			this.availableUpgrades --;
+			this.emit("abilityUpgrade", abilityName, abilityUpgrade);
+			return [true, abilityName, newAbility.cooldown, this.availableUpgrades];
+		}
+		// if you're trying to get an upgrade for an ability you don't have, you don't get the upgrade
+		return [false];
+	}
+	activateAbility(abilityName, game) {
+		const ability = this.abilities.get(abilityName);
+		// make sure snake is alive
+		if (!this.alive) return;
+
+		const output = ability?.activate(game, this);
+		if (output) this.emit("activateAbility");
+		return output;
 	}
 
 	// returns new direction, NOTE: may not equal the direction passed in, depending on the current direction

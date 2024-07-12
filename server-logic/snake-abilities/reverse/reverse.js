@@ -4,8 +4,8 @@
 // cooldown is in seconds
 // returns [tileChanges, [newHeadPos, newDirection]]
 module.exports = {
-	onmount: (snake, cooldown = 5) => {
-		snake.cooldown = cooldown;
+	onmount: (_, abilityManager, cooldown = 5) => {
+		abilityManager.cooldown = cooldown;
 	},
 	activate: (game, snake, proportionKept = 0.5) => {
 		// make sure snake length is 4 or greater
