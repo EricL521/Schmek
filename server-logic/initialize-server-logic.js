@@ -1,22 +1,23 @@
-// initialize socket and game
-const { Server } = require("socket.io");
+// initialize channel and game
+const geckos = import("@geckos.io/server");
 const fs = require("fs");
 const { initializeGame } = require("./initialize-game");
 
-// need to make function to take in server and initialize socket
-const initializeServerLogic = (server) => {
+// need to make function to take in server and initialize channel
+const initializeServerLogic = async (server) => {
 	// first initialize game
 	const game = initializeGame();
 
-	// then initialize socket
-	const io = new Server(server);
+	// then initialize channel
+	const io = (await geckos).default();
+	io.addServer(server);
 	
-	// get all events from socket-events folder
-	const events = fs.readdirSync(__dirname + "/socket-events").map(fileName => require("./socket-events/" + fileName));	
-	// add all events to each socket
-	io.on("connection", (socket) => {
+	// get all events from channel-events folder
+	const events = fs.readdirSync(__dirname + "/channel-events").map(fileName => require("./channel-events/" + fileName));	
+	// add all events to each channel
+	io.onConnection(channel => {
 		events.forEach((event) => {
-			socket.on(event.eventName, (...data) => event.function(game, socket, ...data));
+			channel.on(event.eventName, data => event.function(game, channel, data));
 		});
 	});
 };

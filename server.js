@@ -36,7 +36,7 @@ app.prepare().then(() => {
     });
 
 	// initialize server logic
-	require('./server-logic/initialize-server-logic').initializeServerLogic(server);
+	require('./server-logic/initialize-server-logic.js').initializeServerLogic(server);
 
     server.listen(port, () => {
 		console.log(`> Ready on http://${hostname}:${port}`);

@@ -34,13 +34,13 @@ class Snake extends EventEmitter {
 		return array.reduce((a, b) => a + b, 0);
 	}
 
-	constructor(socket, name, color, body, direction) {
+	constructor(channel, name, color, body, direction) {
 		super();
 
 		this.abilities = new Map(); // map of snake's current abilities (name -> Ability object)
 		this.initializeAbilityUpgradeListener();
 
-		this.socket = socket;
+		this.channel = channel;
 		this.name = name;
 		this.color = color;
 		this.alive = true;
@@ -66,41 +66,41 @@ class Snake extends EventEmitter {
 				if (this.body.length >= abilityUpgradeLengths[i]) {
 					this.availableUpgrades ++;
 					this.totalUpgrades ++;
-					this.socket.emit("abilityUpgrade", this.availableUpgrades); 
+					this.channel.emit("abilityUpgrade", this.availableUpgrades); 
 				}
 				else break; // the upgrade lengths are in ascending order
 			}
 		});
 	}
-	// returns [success, abilityName, cooldown, availableUpgrades]
+	// returns {success, abilityName, cooldown, availableUpgrades}
 	upgradeAbility(abilityName, abilityUpgrade) {
-		if (this.availableUpgrades <= 0) return [false];
+		if (this.availableUpgrades <= 0) return {success: false};
 
 		// if this is a new upgrade abilityName and abilityUpgrade are ewual
 		const ability = this.abilities.get(abilityName);
 		if (ability) {
 			// result is whether or not it was successful
 			const result = ability.upgrade(this, abilityUpgrade);
-			if (!result) return [false];
+			if (!result) return {success: false};
 			// if successful
 			this.availableUpgrades --;
 			this.emit("abilityUpgrade", abilityName, abilityUpgrade);
-			return [true, abilityName, ability.cooldown, this.availableUpgrades];
+			return {success: true, abilityName, cooldown: ability.cooldown, numAvailableUpgrades: this.availableUpgrades};
 		}
 		// if it is a new ability, then abilityName should equal abilityUpgrade
 		else if (abilityName == abilityUpgrade) {
 			const newAbility = new AbilityManager();
 			// result is whether or not it was successful
 			const result = newAbility.upgrade(this, abilityUpgrade);
-			if (!result) return [false];
+			if (!result) return {success: false};
 			// if successful
 			this.abilities.set(abilityName, newAbility);
 			this.availableUpgrades --;
 			this.emit("abilityUpgrade", abilityName, abilityUpgrade);
-			return [true, abilityName, newAbility.cooldown, this.availableUpgrades];
+			return {success: true, abilityName, cooldown: newAbility.cooldown, numAvailableUpgrades: this.availableUpgrades};
 		}
 		// if you're trying to get an upgrade for an ability you don't have, you don't get the upgrade
-		return [false];
+		return {success: false};
 	}
 	activateAbility(abilityName, game) {
 		const ability = this.abilities.get(abilityName);
@@ -116,7 +116,7 @@ class Snake extends EventEmitter {
 	setDirection(newDirection, initial) {
 		// if newDirection is the opposite of prevDirection, don't change direction
 		if (this.currentDirection && (newDirection[0] == -this.currentDirection[0] && newDirection[1] == -this.currentDirection[1])) 
-			return this.newDirection;
+			return {newDirection: this.newDirection};
 
 		this.emit("directionChange", newDirection, this.newDirection);
 		
@@ -124,7 +124,7 @@ class Snake extends EventEmitter {
 		if ( magnitude == 1 || (initial && magnitude <= 1) )
 			this.newDirection = newDirection;
 
-		return this.newDirection;
+		return {newDirection: this.newDirection}
 	}
 	get directionMagnitude() { return Math.abs(Snake.sumArray(this.newDirection)); }
 
@@ -287,7 +287,7 @@ class Snake extends EventEmitter {
 
 		this.alive = false;
 		// send death message to client
-		if (this.socket) this.socket.emit("death", { length: this.body.length });
+		if (this.channel) this.channel.emit("death", { length: this.body.length });
 		// update all tiles in body
 		const tileChanges = [];
 		this.body.forEach(tile => {
@@ -301,7 +301,7 @@ class Snake extends EventEmitter {
 	// should be an array of Tile objects
 	// also sends new head position
 	sendGameUpdate(tileChanges, gameTPS) {
-		if (this.socket) this.socket.emit("gameUpdate", tileChanges, this.head.position, this.speed * gameTPS);
+		if (this.channel) this.channel.emit("gameUpdate", {tileChanges, headPos: this.head.position, travelTPS: this.speed * gameTPS, time: Date.now()});
 	}
 }
 

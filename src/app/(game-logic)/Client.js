@@ -1,4 +1,4 @@
-import io from 'socket.io-client';
+import geckos from '@geckos.io/client'
 
 import KeybindManager from './Keybind-Manager.js'
 import { Tile } from '../../../server-logic/classes/Tile.js';
@@ -9,8 +9,9 @@ class Client extends KeybindManager {
 	constructor(controls) {
 		super(controls);
 
-		this.socket = io();
-		this.initializeSocket();
+		this.channel = geckos({ port: 3000 }) // default port is 9208
+		this.connected = false;
+		this.initializeChannel();
 
 		this.boardState;
 		this.undergroundBoardState;
@@ -31,12 +32,18 @@ class Client extends KeybindManager {
 		// add listeners for this client's events
 		this.initializeClient();
 	}
-	get connected() { return this.socket.connected; }
-	disconnect() { this.socket.disconnect(); }
+	disconnect() { if (this.connected) this.channel.close(); }
 
-	// add listeners for socket events
-	initializeSocket() {
-		this.socket.on("gameUpdate", (tileChanges, headPos, travelTPS) => {
+	// add listeners for channel events
+	initializeChannel() {
+		this.initializeChannelCallbacks();
+
+		this.channel.onConnect(() => this.connected = true);
+		this.channel.onDisconnect(() => this.connected = false);
+
+		this.channel.on("gameUpdate", ({tileChanges, headPos, travelTPS, time}) => {
+			// console.log(Date.now() - time, time); // TEMP TEMP TEMP TEMP TEMP TEMP
+
 			// update board state & head position
 			this.updateBoard(this.boardState, this.undergroundBoardState, tileChanges);
 			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
@@ -61,11 +68,11 @@ class Client extends KeybindManager {
 		});
 
 		// NOTE: this.numAvailableUpgrades is upgraded in a listener
-		this.socket.on("abilityUpgrade", (numAvailableUpgrades) => {
+		this.channel.on("abilityUpgrade", (numAvailableUpgrades) => {
 			this.emit("abilityUpgrade", numAvailableUpgrades);
 		});
 
-		this.socket.on("death", (data) => {
+		this.channel.on("death", (data) => {
 			this.alive = false;
 
 			this.emit("death", data);
@@ -77,100 +84,10 @@ class Client extends KeybindManager {
 			this.emit("newAbility"); // causes ability-indicators to update
 		});
 	}
-	// adds listeners for this client's events
-	// these are for keybinds
-	initializeClient() {
-		// save controls to local storage when they change
-		this.on('controlsChange', () => localStorage.setItem('controlsArray', JSON.stringify(this.controlsArray)));
-
-		this.on("direction", ([x, y]) => {
-			// if that direction is already set or snake is dead, don't send it
-			if (!this.alive || (this.direction[0] == x && this.direction[1] == y) ) return;
-			
-			this.socket.emit("direction", [x, y], ([x, y]) => {
-				this.direction = [x, y]; // callback to make sure server got it
-			});
-		});
-
-		this.on("activateAbility", (index) => {
-			this.activateAbility(this.abilitiesArray[index]);
-		});
-
-		this.on("abilityUpgrade", (numAvailableUpgrades) => this.numAvailableUpgrades = numAvailableUpgrades);
-
-		this.on("togglePauseGame", () => this.socket.emit("togglePauseGame"));
-	}
-
-	// note; this is called from ability-indicator component
-	activateAbility(abilityName) {
-		const ability = this.abilities.get(abilityName);
-		ability?.activateAbility().then(([headPos, direction]) => {
-			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
-			if (headPosChanged) {
-				this.olderHeadPos = this.oldHeadPos;
-				this.oldHeadPos = this.headPos;
-				this.headPos = headPos?? this.headPos;
-			}
-
-			this.direction = direction?? this.direction;
-			this.emit("abilityActivated", ability);
-
-			if (headPosChanged) this.emit("gameUpdate", null, null, this.headPos);
-		}).catch(() => {}); // do nothing if rejected
-	}
-	// note: this is called from upgrade-ability-popup component
-	// if it is a new ability, then abilityName and abilityUpgrade are the same
-	// returns a promise that resolves to true if successful
-	// or false if you already have the upgrade
-	// otherwise rejects
-	upgradeAbility(abilityName, abilityUpgrade) {
-		if (this.numAvailableUpgrades <= 0) return Promise.reject(); // can only upgrade if upgrades are available
-		if (!abilityName || !abilityUpgrade) return Promise.reject(); // and if both are defined
-
-		// check if abilityName and abilityUpgrades are valid
-		const ability = this.abilities.get(abilityName);
-		if (abilityName != abilityUpgrade) {
-			if (!ability) return Promise.resolve(false);
-			// NOTE: hasUpgrade is if you already got the upgrade
-			if (ability.hasUpgrade(abilityUpgrade)) return Promise.resolve(false);
-		}
-		if (ability && abilityName == abilityUpgrade) return Promise.resolve(false);
-		
-		return new Promise((res, _) => {
-			if (ability)
-				ability.upgradeAbility(abilityUpgrade).then((numAvailableUpgrades) => {
-					this.emit("abilityUpgrade", numAvailableUpgrades, ability);
-					res(true);
-				}).catch(() => res(false));
-			else {
-				// if we don't have the ability yet, then create it
-				const newAbility = new AbilityManager(abilityName, 0, this.socket);
-				newAbility.upgradeAbility(abilityUpgrade).then((numAvailableUpgrades) => {
-					this.abilities.set(abilityName, newAbility);
-					this.abilitiesArray.push(abilityName);
-					this.emit("abilityUpgrade", numAvailableUpgrades, newAbility);
-					this.emit("newAbility");
-					res(true);
-				}).catch(() => res(false));
-			}
-		});
-	}
-
-	setName(name) { this.name = name; }
-	setColor(color) { this.color = color; }
-	// if called before connect, will be called when connected
-	joinGame() {
-		// either call function, or add listener for connect
-		if (this.connected) this.joinGameFunction();
-		else {
-			this.emit("loadingStatus", "Connecting");
-			this.once("connect", () => this.joinGameFunction());
-		}
-	}
-	joinGameFunction() {
-		this.emit("loadingStatus", "Joining");
-		// send name to server
-		this.socket.emit("join", this.name, this.color, (dimensions, tiles, undergroundTiles, headPos, serverTPS, abilityOptions) => {
+	// add listeners for channel events that are callbacks
+	initializeChannelCallbacks() {
+		// callback from joining game
+		this.channel.on("joinCallback", ({dimensions, tiles, undergroundTiles, headPos, serverTPS, abilityOptions}) => {
 			this.emit("loadingStatus", "Loading");
 
 			// snake is now alive, also reset direction
@@ -198,6 +115,135 @@ class Client extends KeybindManager {
 				this.headPos, this.oldHeadPos, this.olderHeadPos, this.abilityOptions);
 			this.emit("boardInitialized");
 		});
+
+		// callback from changing direction
+		this.channel.on("directionCallback", ({newDirection}) => {
+			// make sure server got the direction
+			this.direction = newDirection;
+		});
+
+		// callback from trying to upgrade
+		this.channel.on("upgradeAbilityCallback", ({success, abilityName, abilityUpgrade, cooldown, numAvailableUpgrades}) => {
+			if (success) this.upgradeAbilitySuccess(abilityName, cooldown, numAvailableUpgrades);
+			if (!success) this.upgradeAbilityFail(abilityUpgrade)
+		});
+
+		// callback from activating ability
+		this.channel.on("activateAbilityCallback", ({abilityName, success, headPos, direction}) => {
+			// only run if successful
+			if (!success) return;
+
+			// call abilityManager callback function
+			const ability = this.abilities.get(abilityName);
+			ability.activateAbilityCallback();
+
+			const headPosChanged = headPos && (this.headPos[0] !== headPos[0] || this.headPos[1] !== headPos[1]);
+			if (headPosChanged) {
+				this.olderHeadPos = this.oldHeadPos;
+				this.oldHeadPos = this.headPos;
+				this.headPos = headPos?? this.headPos;
+			}
+
+			this.direction = direction?? this.direction;
+			this.emit("abilityActivated", ability);
+
+			if (headPosChanged) this.emit("gameUpdate", null, null, this.headPos);
+		});
+	}
+	// adds listeners for this client's events
+	// these are for keybinds
+	initializeClient() {
+		// save controls to local storage when they change
+		this.on('controlsChange', () => localStorage.setItem('controlsArray', JSON.stringify(this.controlsArray)));
+
+		this.on("direction", ([x, y]) => {
+			// if that direction is already set or snake is dead, don't send it
+			if (!this.alive || (this.direction[0] == x && this.direction[1] == y) ) return;
+			
+			this.channel.emit("direction", {direction: [x, y]});
+		});
+
+		this.on("activateAbility", (index) => {
+			this.activateAbility(this.abilitiesArray[index]);
+		});
+
+		this.on("abilityUpgrade", (numAvailableUpgrades) => this.numAvailableUpgrades = numAvailableUpgrades);
+
+		this.on("togglePauseGame", () => this.channel.emit("togglePauseGame"));
+	}
+
+	// note; this is called from ability-indicator component
+	activateAbility(abilityName) {
+		const ability = this.abilities.get(abilityName);
+		ability?.activateAbility();
+		// callback is handled in channelcallbacks
+	}
+	// note: this is called from upgrade-ability-popup component
+	// if it is a new ability, then abilityName and abilityUpgrade are the same
+	upgradeAbility(abilityName, abilityUpgrade) {
+		if (this.numAvailableUpgrades <= 0) return; // can only upgrade if upgrades are available
+		if (!abilityName || !abilityUpgrade) return; // and if both are defined
+
+		// check if abilityName and abilityUpgrades are valid
+		const ability = this.abilities.get(abilityName);
+		if (abilityName != abilityUpgrade) {
+			if (!ability) return this.upgradeAbilityFail(abilityUpgrade);
+			// NOTE: hasUpgrade is if you already got the upgrade
+			if (ability.hasUpgrade(abilityUpgrade)) return this.upgradeAbilityFail(abilityUpgrade);
+		}
+		if (ability && abilityName == abilityUpgrade) return this.upgradeAbilityFail(abilityUpgrade);
+
+		// if both are valid, send message to server
+		if (ability)
+			ability.upgradeAbility(abilityUpgrade);
+		else {
+			// if we don't have the ability yet, then create it
+			// store in class b/c a seperate function handles callbacks
+			this.newAbility = new AbilityManager(abilityName, 0, this.channel);
+			this.newAbility.upgradeAbility(abilityUpgrade);
+		}
+	}
+	// called when ability successfully upgrades
+	upgradeAbilitySuccess(abilityName, newCooldown, numAvailableUpgrades) {
+		// if we don't already have the ability, then add it permanently
+		if (!this.abilities.has(abilityName)) {
+			this.abilities.set(abilityName, this.newAbility);
+			this.abilitiesArray.push(abilityName);
+			// remove temp newAbility
+			delete this.newAbility;
+
+			this.emit("newAbility");
+		}
+
+		const ability = this.abilities.get(abilityName);
+		ability.upgradeAbilityCallback(abilityName, newCooldown, numAvailableUpgrades);
+		this.emit("abilityUpgrade", numAvailableUpgrades, ability);
+	}
+	// called when ability upgrade fails for any reason
+	upgradeAbilityFail(abilityUpgrade) {
+		// delete newAbility if it exists
+		if (this.newAbility) delete this.newAbility;
+
+		console.log("ugprade fail");
+
+		this.emit("openUpgrade", abilityUpgrade)
+	}
+
+	setName(name) { this.name = name; }
+	setColor(color) { this.color = color; }
+	// if called before connect, will be called when connected
+	joinGame() {
+		// either call function, or add listener for connect
+		if (this.connected) this.joinGameFunction();
+		else {
+			this.emit("loadingStatus", "Connecting");
+			this.once("connect", () => this.joinGameFunction());
+		}
+	}
+	joinGameFunction() {
+		this.emit("loadingStatus", "Joining");
+		// send name to server
+		this.channel.emit("join", {name: this.name, color: this.color});
 	} 
 	// generates board based on dimensions and tiles when joining game
 	genBoard(dimensions, tiles, undergroundTiles) {

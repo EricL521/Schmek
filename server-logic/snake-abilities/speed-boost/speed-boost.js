@@ -47,7 +47,7 @@ module.exports = {
 		};
 		snake.on("updateHead", updateListener);
 
-		// return true to signify that the ability was activated
-		return true;
+		// return {} to signify that the ability was activated
+		return {};
 	}
 };

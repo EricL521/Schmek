@@ -36,6 +36,7 @@ module.exports = {
 		};
 		snake.on("headAdd", headAddListener);
 
-		return true;
+		// returning anything means success
+		return {};
 	}
 };

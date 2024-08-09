@@ -8,10 +8,13 @@ class Game {
 		this.dimensions = dimensions;
 		// tiles is a map of positions to Tile objects
 		// emptyTiles is a set of positions
-		[this.tiles, this.undergroundTiles, this.emptyTiles] = this.initializeTiles(this.dimensions);
-		this.snakes = new Map(); // maps socket to snake
+		const {tiles, undergroundTiles, emptyTiles} = this.initializeTiles(this.dimensions);
+		this.tiles = tiles;
+		this.undergroundTiles = undergroundTiles;
+		this.emptyTiles = emptyTiles;
+		this.snakes = new Map(); // maps channel to snake
 		this.nonPlayerSnakes = new Set(); // stores snakes that aren't controlled by a player
-		this.sockets = new Set(); // stores all sockets that are currently in the game, even if they are dead
+		this.channels = new Set(); // stores all channels that are currently in the game, even if they are dead
 		this.deadSnakes = new Set(); // stores dead snakes
 
 		// store tps of updates
@@ -35,14 +38,14 @@ class Game {
 				emptyTiles.add(Tile.positionToString([x, y]));
 		}
 		console.log(); // move cursor to next line
-		return [tiles, undergroundTiles, emptyTiles];
+		return {tiles, undergroundTiles, emptyTiles};
 	}
 
 	// adds a snake to the game
 	// returns snake
-	addSnake(socket, name, color, initialLength = 3) {
+	addSnake(channel, name, color, initialLength = 3) {
 		// kill snake if it already exists
-		this.killSnake(this.getSnake(socket));
+		this.killSnake(this.getSnake(channel));
 
 		// randomly generate a head position for the snake
 		const [headPos] = this.getRandomEmptyPos(1);
@@ -54,11 +57,11 @@ class Game {
 		this.updatePlayers(body);
 
 		// create snake
-		const snake = new Snake(socket, name, color, body, direction);
-		this.snakes.set(socket, snake);
+		const snake = new Snake(channel, name, color, body, direction);
+		this.snakes.set(channel, snake);
 
-		// add socket to sockets
-		this.sockets.add(socket);
+		// add channel to channels
+		this.channels.add(channel);
 
 		return snake;
 	}
@@ -69,22 +72,22 @@ class Game {
 		// remove from deadSnakes
 		this.deadSnakes.delete(snake);
 		// add to snakes or nonPlayerSnakes
-		if (snake.socket) this.snakes.set(snake.socket, snake);
+		if (snake.channel) this.snakes.set(snake.channel, snake);
 		else this.nonPlayerSnakes.add(snake);
 
 		snake.alive = true;
 	}
 	// adds a dead snake to the game
-	addDeadSnake(socket, name, color, body, update = true) {
+	addDeadSnake(channel, name, color, body, update = true) {
 		// kill snake if it already exists
-		this.killSnake(this.getSnake(socket));
+		this.killSnake(this.getSnake(channel));
 
 		// create snake
-		const snake = new Snake(socket, name, color, body, [0, 0]);
+		const snake = new Snake(channel, name, color, body, [0, 0]);
 		this.killSnake(snake); // kill snake
 
-		// add socket to sockets
-		if (socket) this.sockets.add(socket);
+		// add channel to channels
+		if (channel) this.channels.add(channel);
 
 		// update board and other snakes
 		if (update) {
@@ -98,25 +101,25 @@ class Game {
 		if (!snake) return; // if snake doesn't exist, return
 
 		// remove snake from snakes and add to deadSnakes
-		this.snakes.delete(snake.socket);
+		this.snakes.delete(snake.channel);
 		this.deadSnakes.add(snake);
 
 		// kill snake, and update board ONLY
 		// other snakes aren't updated, because the only that changes is the dead property
 		this.updateBoard(snake.kill());
 	}
-	getSnake(socket) { return this.snakes.get(socket); }
+	getSnake(channel) { return this.snakes.get(channel); }
 	// activates the snake's ability
-	activateAbility(socket, abilityName) {
+	activateAbility(channel, abilityName) {
 		// get snake
-		const snake = this.getSnake(socket);
+		const snake = this.getSnake(channel);
 		if (!snake) return;
 
 		// activate ability
 		const output = snake.activateAbility(abilityName, this);
 		if (!output) return; // if snake doesn't have an ability, return
 
-		const [tileChanges, clientInfo] = output.length? output: [];
+		const {tileChanges, clientInfo} = output?? {};
 		// update board and snakes
 		if (tileChanges && tileChanges.length > 0) {
 			this.updateBoard(tileChanges);
@@ -124,7 +127,7 @@ class Game {
 		}
 
 		// sometimes clientInfo is null, but the ability has still executed, so we return empty array
-		return clientInfo?? [];
+		return clientInfo?? {};
 	}
 
 	// updates tps times per second
@@ -152,6 +155,7 @@ class Game {
 		// send tileChanges to all snakes
 		this.updatePlayers(tileChanges);
 	}
+	// returns tileChanges
 	updateSnake(snake) {
 		if (!snake.alive || snake.speed === 0) return []; // skip dead snakes, and non-moving snakes
 
@@ -226,12 +230,12 @@ class Game {
 	}
 	// sends out tileChanges to all players
 	updatePlayers(tileChanges) {
-		for (const socket of this.sockets) {
-			const snake = this.snakes.get(socket);
+		for (const channel of this.channels) {
+			const snake = this.snakes.get(channel);
 			if (snake)
 				snake.sendGameUpdate(tileChanges, this.tps);
 			else
-				socket.emit("gameUpdate", tileChanges, null);
+				channel.emit("gameUpdate", {tileChanges});
 		}
 	}
 

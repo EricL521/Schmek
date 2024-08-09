@@ -37,6 +37,6 @@ module.exports = {
 		// update head corners
 		tileChanges.push(...snake.updateHeadBorderRadius(false));
 
-		return [tileChanges, [snake.head.position, snake.newDirection], deadSnake];
+		return {tileChanges, clientInfo: {headPos: snake.head.position, direction: snake.newDirection}, deadSnake};
 	}
 };

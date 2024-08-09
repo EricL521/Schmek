@@ -15,7 +15,7 @@ module.exports = {
 		const output = reverseAbility.activate(game, snake, proportionKept);
 		if (!output) return;
 		// get tail snake
-		const tailSnake = output[2];
+		const {tailSnake} = output;
 		// set initial direction
 		tailSnake.currentDirection = tailSnake.head.directionOut;
 		tailSnake.setDirection(tailSnake.head.directionOut);
