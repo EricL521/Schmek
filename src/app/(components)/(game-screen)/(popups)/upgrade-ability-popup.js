@@ -35,7 +35,6 @@ export default function UpgradeAbilityPopup({ client, isUpgrade = false, hiddenO
 		client.on("abilityUpgrade", abilityUpgradeListener);
 
 		const openUpgradeListener = (abilityUpgrade) => {
-			console.log(abilityUpgrade, "open upgrade");
 			hiddenOverridesDispatch({name: abilityUpgrade, value: false});
 		};
 		client.on("openUpgrade", openUpgradeListener)

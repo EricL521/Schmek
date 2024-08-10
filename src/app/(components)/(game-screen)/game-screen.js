@@ -27,8 +27,6 @@ export default function GameScreen({ client, tileSize }) {
 	const abilityIndicators = useMemo(() => {
 		update;
 
-		console.log(client.abilities.size);
-
 		const abilityIndicatorsArray = [];
 		let index = 0;
 		for (const [_, ability] of client?.abilities) 

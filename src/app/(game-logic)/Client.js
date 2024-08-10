@@ -230,8 +230,6 @@ class Client extends KeybindManager {
 		// delete newAbility if it exists
 		if (this.newAbility) delete this.newAbility;
 
-		console.log("ugprade fail");
-
 		this.emit("openUpgrade", abilityUpgrade)
 	}
 
