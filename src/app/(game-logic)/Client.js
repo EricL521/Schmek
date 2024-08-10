@@ -1,6 +1,7 @@
 import geckos from '@geckos.io/client'
 
-import { port } from '../../../config.json';
+import config from '../../../config.json';
+const port = config.port;
 import KeybindManager from './Keybind-Manager.js';
 import { Tile } from '../../../server-logic/classes/Tile.js';
 import AbilityManager from './Ability-Manager.js';
