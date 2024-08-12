@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
+const EventEmitter = require("events");
 
 // manages a single ability for CLIENT
 class AbilityManager extends EventEmitter {
-	constructor (abilityName, cooldown, channel) {
+	constructor (abilityName, cooldown, socket) {
 		super();
 		
 		this.name = abilityName; // name of ability
@@ -13,21 +13,26 @@ class AbilityManager extends EventEmitter {
 		this.cooldown = cooldown?? 0; // cooldown in seconds of ability
 		this.lastAbilityUse = new Date(0); // time of last ability use
 
-		this.channel = channel; // geckos.io client
+		this.socket = socket; // socket.io client
 	}
 
 	// takes in a string of the next upgrade name
+	// returns a Promise of numAvailableUpgrades
 	upgradeAbility(abilityUpgrade) {
 		if (!abilityUpgrade) return;
 
-		this.channel.emit("upgradeAbility", {abilityName: this.name, abilityUpgrade}); 
-	}
-	// called from client class when server responds
-	upgradeAbilityCallback(abilityUpgrade, newCooldown, numAvailableUpgrades) {
-		this.cooldown = newCooldown?? this.cooldown; // update cooldown
-
-		this.abilityUpgrades.add(abilityUpgrade);
-		this.emit("abilityUpgrade", numAvailableUpgrades, this.cooldown);
+		return new Promise((res, rej) => {
+			this.socket.emit("upgradeAbility", this.name, abilityUpgrade, (success, _, newCooldown, numAvailableUpgrades) => {
+				this.cooldown = newCooldown?? this.cooldown; // update cooldown
+				// if succesful, store upgrade and resolve
+				if (success) {
+					this.abilityUpgrades.add(abilityUpgrade);
+					this.emit("abilityUpgrade", numAvailableUpgrades, this.cooldown);
+					res(numAvailableUpgrades);
+				}
+				else rej();
+			});
+		});
 	}
 	// returns true if the ability already has the upgrade
 	hasUpgrade(abilityUpgrade) {
@@ -37,16 +42,22 @@ class AbilityManager extends EventEmitter {
 	get onCooldown() {
 		return Date.now() - this.lastAbilityUse < this.cooldown * 1000;;
 	}
-	// activates ability if not on cooldown
+	// returns a Promise of [headPos, direction]
+	// rejects if ability failed to activate
 	activateAbility() {
-		if (this.onCooldown) return;
+		if (this.onCooldown) return Promise.reject();
 
-		this.channel.emit("activateAbility", {abilityName: this.name});
-	}
-	activateAbilityCallback() {
-		// callback is only called if ability is activated, so set last ability use to now
-		this.lastAbilityUse = new Date(); 
-		this.emit("abilityActivated", this.lastAbilityUse);
+		return new Promise((res, _) => {
+			this.socket.emit("activateAbility", this.name, (success, headPos, direction) => {
+				if (success) {
+					// callback is only called if ability is activated, so set last ability use to now
+					this.lastAbilityUse = new Date(); 
+					this.emit("abilityActivated", this.lastAbilityUse);
+					res([headPos, direction]);
+				}
+				else rej();
+			});
+		});
 	}
 
 }
