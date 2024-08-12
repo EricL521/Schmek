@@ -1,7 +1,6 @@
 import geckos from '@geckos.io/client'
 
-import { port } from '../../../config.json';
-import KeybindManager from './Keybind-Manager.js';
+import KeybindManager from './Keybind-Manager.js'
 import { Tile } from '../../../server-logic/classes/Tile.js';
 import AbilityManager from './Ability-Manager.js';
 
@@ -10,7 +9,7 @@ class Client extends KeybindManager {
 	constructor(controls) {
 		super(controls);
 
-		this.channel = geckos({ port }) // default port is 9208
+		this.channel = geckos({ port: 3000 }) // default port is 9208
 		this.connected = false;
 		this.initializeChannel();
 
@@ -39,12 +38,7 @@ class Client extends KeybindManager {
 	initializeChannel() {
 		this.initializeChannelCallbacks();
 
-		this.channel.onConnect((error) => {
-			if (error) return console.error(error.message);
-
-			console.log("connected");
-			this.connected = true
-		});
+		this.channel.onConnect(() => this.connected = true);
 		this.channel.onDisconnect(() => this.connected = false);
 
 		this.channel.on("gameUpdate", ({tileChanges, headPos, travelTPS, time}) => {
