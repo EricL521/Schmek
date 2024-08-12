@@ -3,9 +3,6 @@
 # vscode folder
 /.vscode/
 
-# config.json
-config.json
-
 # dependencies
 /node_modules
 /.pnp
