@@ -9,12 +9,7 @@ const initializeServerLogic = async (server) => {
 	const game = initializeGame();
 
 	// then initialize channel
-	const io = (await geckos).default({
-		portRange: {
-			min: 10000,
-			max: 10000
-		}
-	});
+	const io = (await geckos).default();
 	io.addServer(server);
 	
 	// get all events from channel-events folder
