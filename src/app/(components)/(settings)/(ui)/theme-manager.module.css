@@ -29,7 +29,7 @@
 #theme-manager button {
 	box-sizing: border-box;
 	height: 35px;
-	width: min-content;
+	flex-shrink: 1;
 	padding: 2px;
 	left: 0; right: 0;
 	margin: 2.5px;
