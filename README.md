@@ -5,16 +5,16 @@ A multiplayer snake game, with a few upgradeable abilities
 List of currently implemented abilities: 
 
 - **Dig**
-  - Activateable ability that allows you to dig under other snakes
+  - Activatable ability that allows you to dig under other snakes
   - Currently no upgrades
 - **Scavenge**
   - Passive ability that allows you to eat the dead bodies of other snakes
   - Can be upgraded for better effeciency
 - **Speed Boost**
-  - Activateable ability that allows you to move faster
+  - Activatable ability that allows you to move faster
   - Can be upgraded to last longer, or go even faster
 - **Reverse**
-  - Activateable ability that allows you to reverse your snake, switching your head and tail
+  - Activatable ability that allows you to reverse your snake, switching your head and tail
   - Can be upgraded to mose less of your snake upon use, or to have the lost snake become alive
 
 ## Setup
