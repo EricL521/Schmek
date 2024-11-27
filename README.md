@@ -18,7 +18,7 @@ List of currently implemented abilities:
   - Can be upgraded to mose less of your snake upon use, or to have the lost snake become alive
 
 ## Setup
-Guide to get the game up and running locally. NOTE: Commands were written for linux
+Guide to get the game up and running locally
 
 **Prerequisites**
 - Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
