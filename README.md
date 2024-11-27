@@ -24,7 +24,6 @@ Guide to get the game up and running locally
 - Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
 
 **Installation & Usage**
-- Install node and npm if not already installed ([more info](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
 - Clone repository
   ```bash
   git clone https://github.com/EricL521/Schmek.git
