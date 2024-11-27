@@ -28,7 +28,7 @@ Guide to get the game up and running locally
   ```bash
   git clone https://github.com/EricL521/Schmek.git
   ```
-- Enter new folder
+- Enter newly created folder
   ```bash
   cd Schmek
   ```
@@ -36,7 +36,7 @@ Guide to get the game up and running locally
   ```bash
   npm install
   ```
-- Build server
+- Build application
   ```bash
   npm run build
   ```
