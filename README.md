@@ -20,33 +20,39 @@ List of currently implemented abilities:
 ## Setup
 Guide to get the game up and running locally
 
-**Prerequisites**
+### Prerequisites
 - Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
 
-**Installation & Usage**
+### Quick Start
+- Single command that clones and launches game. Requires node and npm
+  
+  ```bash
+  git clone https://github.com/EricL521/Schmek.git && cd Schmek && npm i && npm run build && npm run start
+  ```
+
+### Installation & Usage
 - Clone repository
+  
   ```bash
   git clone https://github.com/EricL521/Schmek.git
   ```
 - Enter newly created folder
+  
   ```bash
   cd Schmek
   ```
 - Install Node.js packages
+  
   ```bash
   npm install
   ```
 - Build application
+  
   ```bash
   npm run build
   ```
 - Start server
+  
   ```bash
   npm run start
   ```
-
-**Quick Start**
-- Single command that clones and launches game. Requires node and npm
-```bash
-git clone https://github.com/EricL521/Schmek.git && cd Schmek && npm i && npm run build && npm run start
-```
