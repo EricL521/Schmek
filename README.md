@@ -27,7 +27,7 @@ Guide to get the game up and running locally
 - Single command that clones and launches game. Requires node and npm
   
   ```bash
-  git clone https://github.com/EricL521/Schmek.git && cd Schmek && docker compose up -d
+  git clone https://github.com/EricL521/Schmek.git && cd Schmek && cp .env.example .env && docker compose up -d
   ```
 
 ### Installation & Usage
@@ -40,6 +40,11 @@ Guide to get the game up and running locally
   
   ```bash
   cd Schmek
+  ```
+- Copy [`.env.example`](/.env.example) and update to your values
+  
+  ```bash
+  cp .env.example .env
   ```
 - Start Docker container
 
