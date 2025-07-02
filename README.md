@@ -21,13 +21,13 @@ List of currently implemented abilities:
 Guide to get the game up and running locally
 
 ### Prerequisites
-- Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
+- Docker Compose ([installation guide](https://docs.docker.com/compose/install/))
 
 ### Quick Start
 - Single command that clones and launches game. Requires node and npm
   
   ```bash
-  git clone https://github.com/EricL521/Schmek.git && cd Schmek && npm i && npm run build && npm run start
+  git clone https://github.com/EricL521/Schmek.git && cd Schmek && docker compose up -d
   ```
 
 ### Installation & Usage
@@ -41,18 +41,30 @@ Guide to get the game up and running locally
   ```bash
   cd Schmek
   ```
-- Install Node.js packages
+- Start Docker container
+
+  ```bash
+  docker compose up -d
+  ```
+- To stop, run
+
+  ```bash
+  docker compose down
+  ```
+- To update, run
+
+  ```bash
+  docker compose build
+  ```
+### Testing
+- For testing changes, instead of using docker and rebuilding every time, you can also run using npm
+- Install npm packages
   
   ```bash
   npm install
   ```
-- Build application
+- Run game
   
   ```bash
-  npm run build
-  ```
-- Start server
-  
-  ```bash
-  npm run start
+  npm run dev
   ```
