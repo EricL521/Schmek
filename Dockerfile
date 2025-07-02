@@ -1,0 +1,16 @@
+FROM node:22
+WORKDIR /app
+
+COPY . .
+RUN npm install
+
+ARG SERVER_PORT
+ENV SERVER_PORT=${SERVER_PORT}
+ARG SERVER_HOSTNAME
+ENV SERVER_HOSTNAME=${SERVER_HOSTNAME}
+
+EXPOSE ${SERVER_PORT}
+
+RUN npm run build
+
+CMD ["npm", "run", "start"]

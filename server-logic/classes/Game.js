@@ -28,8 +28,10 @@ class Game {
 		const emptyTiles = new Set();
 		console.log("Generating Tiles...");
 		for (let y = 0; y < dimensions[0]; y++) {
-			process.stdout.cursorTo(0); // move cursor to beginning of line
-			process.stdout.write("Row " + (y + 1) + "/" + dimensions[0]);
+			if (process.stdout.isTTY) {
+				process.stdout.cursorTo(0); // move cursor to beginning of line
+				process.stdout.write("Row " + (y + 1) + "/" + dimensions[0]);
+			}
 
 			for (let x = 0; x < dimensions[1]; x++) 
 				emptyTiles.add(Tile.positionToString([x, y]));
@@ -250,8 +252,10 @@ class Game {
 		if (log) console.log("Generating Food...");
 		this.getRandomEmptyPos(numFood).forEach((pos, i) => {
 			if (log) {
-				process.stdout.cursorTo(0); // move cursor to beginning of line
-				process.stdout.write("Apple " + (i + 1) + "/" + numFood);
+				if (process.stdout.isTTY) {
+					process.stdout.cursorTo(0); // move cursor to beginning of line
+					process.stdout.write("Apple " + (i + 1) + "/" + numFood);
+				}
 			}
 			const food = new Tile(pos, "food", "red", 0.8, [25, 25, 25, 25]);
 			tileChanges.push(food);
