@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/env": "^15.3.4",
     "bufferutil": "^4.0.7",
     "next": "latest",
     "react": "latest",
